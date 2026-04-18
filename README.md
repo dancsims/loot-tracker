@@ -1,4 +1,4 @@
-# ⚔ D&D Loot Tracker
+# ⚔ Loot Tracker
 
 A lightweight, self-contained web application for tracking party loot, currency, and notable items in a Dungeons & Dragons 5th Edition campaign. No server, no database, no accounts — just open the file and play.
 

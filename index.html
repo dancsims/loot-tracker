@@ -3,953 +3,524 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>D&D Loot Tracker</title>
+  <title>Loot Tracker</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #ffffff;
-      --bg2: #f5f5f3;
-      --bg3: #efefec;
-      --text: #1a1a18;
-      --text2: #6b6b67;
-      --text3: #9b9b96;
+      --bg-primary: #ffffff;
+      --bg-secondary: #f5f5f3;
+      --bg-tertiary: #eeede9;
+      --text-primary: #1a1a18;
+      --text-secondary: #6b6b67;
       --border: rgba(0,0,0,0.12);
-      --border2: rgba(0,0,0,0.22);
-      --radius: 8px;
-      --radius-lg: 12px;
-      --purple: #3C3489;
-      --purple-light: #EEEDFE;
-      --purple-mid: #534AB7;
-      --purple-text: #26215C;
+      --border-md: rgba(0,0,0,0.22);
+      --accent: #3C3489;
+      --accent-hover: #534AB7;
+      --accent-text: #EEEDFE;
+      --danger-text: #A32D2D;
+      --danger-bg: #FCEBEB;
+      --danger-border: rgba(240,149,149,0.5);
+      --pos: #3B6D11;
+      --neg: #A32D2D;
+      --badge-char-bg: #E6F1FB; --badge-char-text: #0C447C;
+      --badge-loc-bg: #EAF3DE;  --badge-loc-text: #27500A;
+      --badge-notable-bg: #FAEEDA; --badge-notable-text: #633806;
+      --badge-srd-bg: #EEEDFE;  --badge-srd-text: #3C3489;
+      --radius-sm: 6px; --radius-md: 8px; --radius-lg: 12px;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg: #1c1c1a;
-        --bg2: #252523;
-        --bg3: #2e2e2b;
-        --text: #f0efe8;
-        --text2: #9b9b96;
-        --text3: #6b6b67;
-        --border: rgba(255,255,255,0.1);
-        --border2: rgba(255,255,255,0.2);
-        --purple: #7F77DD;
-        --purple-light: #26215C;
-        --purple-mid: #AFA9EC;
-        --purple-text: #EEEDFE;
+        --bg-primary: #1e1e1c; --bg-secondary: #2a2a28; --bg-tertiary: #313130;
+        --text-primary: #e8e8e4; --text-secondary: #9a9a94;
+        --border: rgba(255,255,255,0.1); --border-md: rgba(255,255,255,0.2);
+        --accent: #7F77DD; --accent-hover: #AFA9EC; --accent-text: #26215C;
+        --danger-text: #F09595; --danger-bg: #2a1515; --danger-border: rgba(240,149,149,0.3);
+        --pos: #97C459; --neg: #F09595;
+        --badge-char-bg: #042C53; --badge-char-text: #B5D4F4;
+        --badge-loc-bg: #173404;  --badge-loc-text: #C0DD97;
+        --badge-notable-bg: #412402; --badge-notable-text: #FAC775;
+        --badge-srd-bg: #26215C;  --badge-srd-text: #AFA9EC;
       }
     }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      font-size: 14px;
-      color: var(--text);
-      background: var(--bg3);
-      min-height: 100vh;
-    }
+    body { font-family: var(--font); font-size: 14px; color: var(--text-primary); background: var(--bg-tertiary); min-height: 100vh; }
+    .app { max-width: 1000px; margin: 0 auto; background: var(--bg-primary); min-height: 100vh; display: flex; flex-direction: column; box-shadow: 0 0 0 0.5px var(--border); }
 
-    .app {
-      max-width: 960px;
-      margin: 0 auto;
-      background: var(--bg);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 0 0 0.5px var(--border);
-    }
-
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 18px;
-      border-bottom: 0.5px solid var(--border);
-      gap: 12px;
-    }
-
+    .topbar { display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 0.5px solid var(--border); }
     .topbar-left { display: flex; align-items: center; gap: 8px; }
-    .topbar-left h1 { font-size: 15px; font-weight: 500; }
-    .topbar-actions { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .topbar h1 { font-size: 15px; font-weight: 500; }
+    .topbar-actions { display: flex; gap: 6px; align-items: center; }
+    .srd-status { font-size: 11px; color: var(--text-secondary); }
 
-    .nav {
-      display: flex;
-      border-bottom: 0.5px solid var(--border);
-      overflow-x: auto;
-    }
+    .nav { display: flex; border-bottom: 0.5px solid var(--border); }
+    .nav button { background: none; border: none; border-bottom: 2px solid transparent; padding: 10px 16px; font-size: 13px; cursor: pointer; color: var(--text-secondary); font-family: var(--font); }
+    .nav button.active { color: var(--text-primary); border-bottom-color: var(--text-primary); font-weight: 500; }
+    .nav button:hover:not(.active) { color: var(--text-primary); }
 
-    .nav button {
-      background: none;
-      border: none;
-      border-bottom: 2px solid transparent;
-      padding: 9px 16px;
-      font-size: 13px;
-      cursor: pointer;
-      color: var(--text2);
-      font-family: inherit;
-      white-space: nowrap;
-    }
+    .content { flex: 1; padding: 16px 18px; }
 
-    .nav button.active {
-      color: var(--text);
-      border-bottom-color: var(--text);
-      font-weight: 500;
-    }
-
-    .content { flex: 1; padding: 16px 18px; overflow: auto; }
-
-    .btn {
-      background: var(--bg);
-      border: 0.5px solid var(--border2);
-      border-radius: var(--radius);
-      padding: 6px 12px;
-      font-size: 13px;
-      cursor: pointer;
-      color: var(--text);
-      font-family: inherit;
-      transition: background 0.1s;
-    }
-    .btn:hover { background: var(--bg2); }
-    .btn.primary { background: var(--purple); border-color: var(--purple); color: var(--purple-light); }
-    .btn.primary:hover { background: var(--purple-mid); }
-    .btn.danger { color: #A32D2D; border-color: rgba(240,149,149,0.5); }
-    .btn.danger:hover { background: #FCEBEB; }
+    .btn { background: var(--bg-primary); border: 0.5px solid var(--border-md); border-radius: var(--radius-md); padding: 6px 12px; font-size: 13px; cursor: pointer; color: var(--text-primary); font-family: var(--font); }
+    .btn:hover { background: var(--bg-secondary); }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+    .btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+    .btn.danger { color: var(--danger-text); border-color: var(--danger-border); }
+    .btn.danger:hover { background: var(--danger-bg); }
     .btn.sm { padding: 3px 8px; font-size: 12px; }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    .metrics {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-      gap: 8px;
-      margin-bottom: 16px;
-    }
-
-    .metric {
-      background: var(--bg2);
-      border-radius: var(--radius);
-      padding: 10px 12px;
-    }
-
-    .metric-label { font-size: 11px; color: var(--text2); margin-bottom: 3px; }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin-bottom: 16px; }
+    .metric { background: var(--bg-secondary); border-radius: var(--radius-md); padding: 10px 12px; }
+    .metric-label { font-size: 11px; color: var(--text-secondary); margin-bottom: 3px; }
     .metric-value { font-size: 20px; font-weight: 500; }
 
-    .section-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 10px;
-    }
-
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
     .section-header h2 { font-size: 14px; font-weight: 500; }
 
+    .table-wrap { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: 13px; }
-    th {
-      text-align: left;
-      font-weight: 500;
-      color: var(--text2);
-      padding: 5px 8px;
-      border-bottom: 0.5px solid var(--border);
-      font-size: 11px;
-      white-space: nowrap;
-    }
-    td {
-      padding: 7px 8px;
-      border-bottom: 0.5px solid var(--border);
-      vertical-align: top;
-    }
+    th { text-align: left; font-weight: 500; color: var(--text-secondary); padding: 5px 8px; border-bottom: 0.5px solid var(--border); font-size: 11px; white-space: nowrap; }
+    td { padding: 6px 8px; border-bottom: 0.5px solid var(--border); }
     tr:last-child td { border-bottom: none; }
-    tbody tr:hover td { background: var(--bg2); }
-    .tfoot-row td { font-weight: 500; background: var(--bg2); border-top: 0.5px solid var(--border2); }
+    tbody tr:hover td { background: var(--bg-secondary); }
+    tfoot tr td { font-weight: 500; background: var(--bg-secondary); border-top: 0.5px solid var(--border-md); }
+    .sort-btn { background: none; border: none; cursor: pointer; font-size: 11px; color: var(--text-secondary); font-family: var(--font); padding: 0 2px; }
+    .sort-btn:hover { color: var(--text-primary); }
+    .sort-btn.asc::after { content: ' ↑'; }
+    .sort-btn.desc::after { content: ' ↓'; }
 
-    .badge {
-      display: inline-block;
-      font-size: 11px;
-      padding: 2px 6px;
-      border-radius: 20px;
-      font-weight: 500;
-      white-space: nowrap;
-    }
-    .badge.character { background: #E6F1FB; color: #0C447C; }
-    .badge.location  { background: #EAF3DE; color: #27500A; }
-    .badge.notable   { background: #FAEEDA; color: #633806; }
-    .badge.srd       { background: var(--purple-light); color: var(--purple-text); }
-    .badge.neutral   { background: var(--bg2); color: var(--text2); }
+    .badge { display: inline-block; font-size: 11px; padding: 2px 6px; border-radius: 20px; font-weight: 500; white-space: nowrap; }
+    .badge.character { background: var(--badge-char-bg); color: var(--badge-char-text); }
+    .badge.location  { background: var(--badge-loc-bg);  color: var(--badge-loc-text); }
+    .badge.notable   { background: var(--badge-notable-bg); color: var(--badge-notable-text); }
+    .badge.srd       { background: var(--badge-srd-bg); color: var(--badge-srd-text); }
+    .badge.neutral   { background: var(--bg-secondary); color: var(--text-secondary); }
 
-    @media (prefers-color-scheme: dark) {
-      .badge.character { background: #0C447C; color: #B5D4F4; }
-      .badge.location  { background: #27500A; color: #C0DD97; }
-      .badge.notable   { background: #633806; color: #FAC775; }
-    }
+    .pos { color: var(--pos); } .neg { color: var(--neg); }
 
-    .modal-bg {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.4);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-    }
+    .filter-row { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+    .filter-row input, .filter-row select { padding: 5px 9px; border: 0.5px solid var(--border-md); border-radius: var(--radius-md); font-size: 12px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font); }
 
-    .modal {
-      background: var(--bg);
-      border-radius: var(--radius-lg);
-      border: 0.5px solid var(--border);
-      padding: 20px;
-      width: 420px;
-      max-width: 95vw;
-      max-height: 88vh;
-      overflow-y: auto;
-    }
+    .qty-input { width: 56px; padding: 3px 6px; border: 0.5px solid var(--border-md); border-radius: var(--radius-md); font-size: 12px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font); text-align: center; }
 
+    .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 100; }
+    .modal { background: var(--bg-primary); border-radius: var(--radius-lg); border: 0.5px solid var(--border); padding: 20px; width: 420px; max-width: 96vw; max-height: 88vh; overflow-y: auto; }
     .modal h3 { font-size: 15px; font-weight: 500; margin-bottom: 14px; }
     .field { margin-bottom: 10px; }
-
-    .field label {
-      display: block;
-      font-size: 11px;
-      color: var(--text2);
-      margin-bottom: 3px;
-      text-transform: uppercase;
-      letter-spacing: 0.03em;
-    }
-
-    .field input,
-    .field select,
-    .field textarea {
-      width: 100%;
-      padding: 7px 10px;
-      border: 0.5px solid var(--border2);
-      border-radius: var(--radius);
-      font-size: 13px;
-      background: var(--bg);
-      color: var(--text);
-      font-family: inherit;
-    }
-
+    .field label { display: block; font-size: 11px; color: var(--text-secondary); margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.03em; }
+    .field input, .field select, .field textarea { width: 100%; padding: 7px 10px; border: 0.5px solid var(--border-md); border-radius: var(--radius-md); font-size: 13px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font); }
     .field textarea { resize: vertical; min-height: 60px; }
-
-    .modal-footer { display: flex; justify-content: flex-end; gap: 7px; margin-top: 14px; }
-
+    .modal-footer { display: flex; justify-content: flex-end; gap: 7px; margin-top: 16px; }
     .amount-grid { display: grid; gap: 5px; }
     .amount-entry { display: grid; grid-template-columns: 1fr 90px; gap: 6px; align-items: center; font-size: 13px; }
 
-    .empty { text-align: center; color: var(--text2); font-size: 13px; padding: 28px 0; }
-
-    .filter-row { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
-    .filter-row input,
-    .filter-row select {
-      padding: 5px 9px;
-      border: 0.5px solid var(--border2);
-      border-radius: var(--radius);
-      font-size: 12px;
-      background: var(--bg);
-      color: var(--text);
-      font-family: inherit;
-    }
+    .srd-autocomplete { position: relative; }
+    .srd-dropdown { position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-primary); border: 0.5px solid var(--border-md); border-radius: var(--radius-md); z-index: 50; max-height: 180px; overflow-y: auto; margin-top: 2px; }
+    .srd-option { padding: 7px 10px; font-size: 13px; cursor: pointer; }
+    .srd-option:hover { background: var(--bg-secondary); }
 
     .settings-section { margin-bottom: 22px; }
-    .settings-section h3 {
-      font-size: 11px;
-      font-weight: 500;
-      margin-bottom: 8px;
-      color: var(--text2);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-
-    .list-item {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 7px 10px;
-      border: 0.5px solid var(--border);
-      border-radius: var(--radius);
-      margin-bottom: 5px;
-      font-size: 13px;
-    }
-
+    .settings-section h3 { font-size: 11px; font-weight: 500; margin-bottom: 8px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.04em; }
+    .list-item { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; border: 0.5px solid var(--border); border-radius: var(--radius-md); margin-bottom: 5px; font-size: 13px; }
     .add-inline { display: flex; gap: 5px; margin-top: 6px; }
-    .add-inline input {
-      flex: 1;
-      padding: 6px 10px;
-      border: 0.5px solid var(--border2);
-      border-radius: var(--radius);
-      font-size: 13px;
-      background: var(--bg);
-      color: var(--text);
-      font-family: inherit;
-    }
+    .add-inline input { flex: 1; padding: 6px 9px; border: 0.5px solid var(--border-md); border-radius: var(--radius-md); font-size: 13px; background: var(--bg-primary); color: var(--text-primary); font-family: var(--font); }
 
-    .sort-btn {
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-size: 11px;
-      color: var(--text2);
-      padding: 0 2px;
-      font-family: inherit;
-    }
-    .sort-btn.asc::after  { content: ' ↑'; }
-    .sort-btn.desc::after { content: ' ↓'; }
-
-    .pos { color: #3B6D11; }
-    .neg { color: #A32D2D; }
-    @media (prefers-color-scheme: dark) {
-      .pos { color: #97C459; }
-      .neg { color: #F09595; }
-    }
-
-    .srd-autocomplete { position: relative; }
-    .srd-dropdown {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: var(--bg);
-      border: 0.5px solid var(--border2);
-      border-radius: var(--radius);
-      z-index: 50;
-      max-height: 180px;
-      overflow-y: auto;
-      margin-top: 2px;
-    }
-    .srd-option { padding: 7px 10px; font-size: 13px; cursor: pointer; }
-    .srd-option:hover { background: var(--bg2); }
-    .srd-status { font-size: 11px; color: var(--text2); }
-
-    .qty-input {
-      width: 58px;
-      padding: 4px 6px;
-      border: 0.5px solid var(--border2);
-      border-radius: var(--radius);
-      font-size: 12px;
-      background: var(--bg);
-      color: var(--text);
-      font-family: inherit;
-      text-align: center;
-    }
-
+    .empty { text-align: center; color: var(--text-secondary); font-size: 13px; padding: 28px 0; }
+    .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     @media (max-width: 600px) {
-      .content { padding: 12px; }
-      .topbar { padding: 10px 12px; }
-      .metrics { grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); }
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .nav button { padding: 10px 10px; font-size: 12px; }
     }
   </style>
 </head>
 <body>
-
-<div class="app" id="app">
+<div class="app">
   <div class="topbar">
     <div class="topbar-left">
       <span style="font-size:18px">⚔</span>
       <h1 id="campaign-title">My Campaign</h1>
     </div>
     <div class="topbar-actions">
-      <span id="srd-status" class="srd-status"></span>
+      <span class="srd-status" id="srd-status"></span>
       <button class="btn sm" onclick="importData()">Import</button>
       <button class="btn sm primary" onclick="exportData()">Export JSON</button>
     </div>
   </div>
-
   <div class="nav">
     <button class="nav active" onclick="showTab('dashboard',this)">Dashboard</button>
     <button class="nav" onclick="showTab('transactions',this)">Ledger</button>
     <button class="nav" onclick="showTab('items',this)">Loot</button>
     <button class="nav" onclick="showTab('settings',this)">Settings</button>
   </div>
-
   <div class="content" id="content"></div>
 </div>
-
 <div id="modal-container"></div>
 <input type="file" id="file-input" accept=".json" style="display:none" onchange="handleImport(event)">
 
 <script>
-  const DEFAULT = {
-    campaign: "My Campaign",
-    currencies: [
-      { id: "pp", name: "Platinum", symbol: "pp", rate: 10 },
-      { id: "gp", name: "Gold",     symbol: "gp", rate: 1  },
-      { id: "ep", name: "Electrum", symbol: "ep", rate: 0.5 },
-      { id: "sp", name: "Silver",   symbol: "sp", rate: 0.1 },
-      { id: "cp", name: "Copper",   symbol: "cp", rate: 0.01 }
-    ],
-    transactions: [
-      { id: "t1", date: "2026-04-01", description: "Starting funds",    amounts: { gp: 50 },            note: "Party treasury start" },
-      { id: "t2", date: "2026-04-05", description: "Sold goblin loot",  amounts: { gp: 12, sp: 5 },     note: "" },
-      { id: "t3", date: "2026-04-10", description: "Inn & supplies",    amounts: { gp: -8, sp: -4 },    note: "" }
-    ],
-    items: [
-      { id: "i1", name: "Cloak of Elvenkind", description: "Grants advantage on Stealth checks.", carrier: "Aria",  location: null, notable: true,  qty: 1, tags: ["magic","wondrous"],   srd: true },
-      { id: "i2", name: "Bag of Holding",     description: "Holds up to 500 lbs, 64 cubic feet.", carrier: null,  location: "The Keep", notable: true, qty: 1, tags: ["magic","wondrous"], srd: true },
-      { id: "i3", name: "Potion of Healing",  description: "Restores 2d4+2 HP.",                 carrier: "Bronn", location: null, notable: false, qty: 3, tags: ["consumable","potion"],  srd: true }
-    ],
-    locations:   ["Party Inventory", "The Keep", "Ironforge Bank", "Millhaven Town"],
-    characters:  ["Aria", "Bronn", "Cass", "Dex"]
-  };
+const DEFAULT = {
+  campaign: "My Campaign",
+  currencies: [
+    {id:"pp",name:"Platinum",symbol:"pp",rate:10},
+    {id:"gp",name:"Gold",    symbol:"gp",rate:1},
+    {id:"ep",name:"Electrum",symbol:"ep",rate:0.5},
+    {id:"sp",name:"Silver",  symbol:"sp",rate:0.1},
+    {id:"cp",name:"Copper",  symbol:"cp",rate:0.01}
+  ],
+  transactions: [
+    {id:"t1",date:"2026-04-01",description:"Starting funds",  amounts:{gp:50},       note:"Party treasury start"},
+    {id:"t2",date:"2026-04-05",description:"Sold goblin loot",amounts:{gp:12,sp:5},  note:""},
+    {id:"t3",date:"2026-04-10",description:"Inn & supplies",  amounts:{gp:-8,sp:-4}, note:""}
+  ],
+  items: [
+    {id:"i1",name:"Cloak of Elvenkind",description:"Grants advantage on Stealth checks.", carrier:"Aria", location:null,       notable:true, qty:1,tags:["magic","wondrous"],  srd:true},
+    {id:"i2",name:"Bag of Holding",    description:"Holds up to 500 lbs, 64 cubic feet.",carrier:null,  location:"The Keep", notable:true, qty:1,tags:["magic","wondrous"],  srd:true},
+    {id:"i3",name:"Potion of Healing", description:"Restores 2d4+2 HP.",                 carrier:"Bronn",location:null,       notable:false,qty:3,tags:["consumable","potion"],srd:true}
+  ],
+  locations:  ["Party Inventory","The Keep","Ironforge Bank","Millhaven Town"],
+  characters: ["Aria","Bronn","Cass","Dex"]
+};
 
-  let state    = JSON.parse(localStorage.getItem('loot-tracker-v2') || 'null') || JSON.parse(JSON.stringify(DEFAULT));
-  let srdItems = [];
-  let srdLoaded = false;
-  let txSort   = { col: 'date', dir: 'desc' };
-  let itemSort = { col: 'name', dir: 'asc'  };
+let state    = JSON.parse(localStorage.getItem('loot-tracker-v2')||'null') || JSON.parse(JSON.stringify(DEFAULT));
+let srdItems = [], srdLoaded = false;
+let txSort   = {col:'date',  dir:'desc'};
+let itemSort = {col:'name',  dir:'asc'};
 
-  function save() { localStorage.setItem('loot-tracker-v2', JSON.stringify(state)); }
-  function uid()  { return 'x' + Math.random().toString(36).slice(2, 9); }
+function save(){ localStorage.setItem('loot-tracker-v2', JSON.stringify(state)); }
+function uid(){ return 'x'+Math.random().toString(36).slice(2,9); }
 
-  /* ── SRD loader ─────────────────────────────────────────────────── */
-  async function loadSRD() {
-    const el = document.getElementById('srd-status');
-    if (el) el.textContent = 'Loading SRD…';
-    try {
-      const r  = await fetch('https://www.dnd5eapi.co/api/magic-items?limit=500');
-      const d  = await r.json();
-      const items = d.results || [];
-      const details = await Promise.all(items.slice(0, 300).map(async item => {
-        try {
-          const r2 = await fetch('https://www.dnd5eapi.co/api/magic-items/' + item.index);
-          const d2 = await r2.json();
-          return {
-            name: d2.name,
-            description: (d2.desc || []).join(' '),
-            tags: [
-              d2.equipment_category?.name ? d2.equipment_category.name.toLowerCase() : 'magic',
-              d2.rarity?.name             ? d2.rarity.name.toLowerCase()             : ''
-            ].filter(Boolean),
-            index: item.index
-          };
-        } catch { return { name: item.name, description: '', tags: ['magic'], index: item.index }; }
-      }));
-      srdItems  = details.filter(Boolean);
-      srdLoaded = true;
-      if (el) el.textContent = srdItems.length + ' SRD items loaded';
-      setTimeout(() => { if (el) el.textContent = ''; }, 3000);
-    } catch {
-      srdLoaded = false;
-      if (el) el.textContent = 'SRD unavailable (offline)';
-      setTimeout(() => { if (el) el.textContent = ''; }, 4000);
-    }
-  }
-
-  /* ── Currency helpers ────────────────────────────────────────────── */
-  function totalsInGP() {
-    const t = {};
-    state.currencies.forEach(c => t[c.id] = 0);
-    state.transactions.forEach(tx => {
-      Object.entries(tx.amounts || {}).forEach(([cid, amt]) => { if (t[cid] !== undefined) t[cid] += amt; });
-    });
-    return t;
-  }
-
-  function grandTotalGP() {
-    const t = totalsInGP();
-    return state.currencies.reduce((s, c) => s + (t[c.id] || 0) * c.rate, 0);
-  }
-
-  /* ── Tab routing ─────────────────────────────────────────────────── */
-  function showTab(tab, btn) {
-    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-    const c = document.getElementById('content');
-    if      (tab === 'dashboard')    c.innerHTML = renderDashboard();
-    else if (tab === 'transactions') c.innerHTML = renderTransactions();
-    else if (tab === 'items')        c.innerHTML = renderItems();
-    else if (tab === 'settings')     c.innerHTML = renderSettings();
-  }
-
-  /* ── Dashboard ───────────────────────────────────────────────────── */
-  function renderDashboard() {
-    const t  = totalsInGP();
-    const gp = grandTotalGP();
-
-    let mh = state.currencies.map(c => {
-      const v = t[c.id] || 0;
-      return `<div class="metric">
-        <div class="metric-label">${c.name}</div>
-        <div class="metric-value ${v < 0 ? 'neg' : ''}">${v.toLocaleString()} <span style="font-size:12px;font-weight:400">${c.symbol}</span></div>
-      </div>`;
-    }).join('');
-    mh += `<div class="metric" style="border:0.5px solid rgba(83,74,183,0.25)">
-      <div class="metric-label">Total (gp equiv)</div>
-      <div class="metric-value ${gp < 0 ? 'neg' : ''}">${gp.toFixed(2)} <span style="font-size:12px;font-weight:400">gp</span></div>
-    </div>`;
-
-    const notable = state.items.filter(i => i.notable);
-    const nh = notable.length
-      ? notable.map(i => `<tr>
-          <td><span style="font-weight:500">${i.name}</span>${i.qty > 1 ? ` <span class="badge neutral">×${i.qty}</span>` : ''}</td>
-          <td>${i.carrier ? `<span class="badge character">${i.carrier}</span>` : i.location ? `<span class="badge location">${i.location}</span>` : '<span style="color:var(--text2)">—</span>'}</td>
-        </tr>`).join('')
-      : `<tr><td colspan="2" class="empty">No notable items yet</td></tr>`;
-
-    const recent = [...state.transactions].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
-    const rh = recent.length
-      ? recent.map(tx => {
-          const parts = Object.entries(tx.amounts || {})
-            .map(([cid, a]) => `<span class="${a < 0 ? 'neg' : 'pos'}">${a > 0 ? '+' : ''}${a} ${cid}</span>`)
-            .join(' ');
-          return `<tr>
-            <td style="color:var(--text2);white-space:nowrap;width:90px">${tx.date}</td>
-            <td>${tx.description}</td>
-            <td style="text-align:right;white-space:nowrap">${parts}</td>
-          </tr>`;
-        }).join('')
-      : `<tr><td colspan="3" class="empty">No transactions yet</td></tr>`;
-
-    return `
-      <div class="metrics">${mh}</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-        <div>
-          <div class="section-header">
-            <h2>Notable loot</h2>
-            <span style="font-size:12px;color:var(--text2)">${notable.length} item${notable.length !== 1 ? 's' : ''}</span>
-          </div>
-          <table><thead><tr><th>Item</th><th>Held by / stored at</th></tr></thead><tbody>${nh}</tbody></table>
-        </div>
-        <div>
-          <div class="section-header"><h2>Recent transactions</h2></div>
-          <table><thead><tr><th>Date</th><th>Description</th><th style="text-align:right">Amount</th></tr></thead><tbody>${rh}</tbody></table>
-        </div>
-      </div>`;
-  }
-
-  /* ── Ledger ──────────────────────────────────────────────────────── */
-  function getTxWithBalances() {
-    const sorted = [...state.transactions].sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
-    const running = {};
-    state.currencies.forEach(c => running[c.id] = 0);
-    return sorted.map(tx => {
-      Object.entries(tx.amounts || {}).forEach(([cid, amt]) => { if (running[cid] !== undefined) running[cid] += amt; });
-      return { ...tx, running: { ...running } };
-    });
-  }
-
-  function renderTransactions() {
-    let rows = getTxWithBalances();
-    rows.sort((a, b) => {
-      let av, bv;
-      if      (txSort.col === 'date')        { av = a.date;        bv = b.date; }
-      else if (txSort.col === 'description') { av = a.description; bv = b.description; }
-      else                                   { av = a.date;        bv = b.date; }
-      const cmp = av < bv ? -1 : av > bv ? 1 : 0;
-      return cmp * (txSort.dir === 'asc' ? 1 : -1);
-    });
-
-    const totals  = totalsInGP();
-    const grandGP = grandTotalGP();
-
-    const amtCols   = state.currencies.map(c => `<th style="text-align:right;width:58px"><button class="sort-btn ${txSort.col === c.id ? txSort.dir : ''}" onclick="sortTx('${c.id}')">${c.symbol}</button></th>`).join('');
-    const totalCols = state.currencies.map(c => `<td style="text-align:right"><span class="${(totals[c.id] || 0) < 0 ? 'neg' : 'pos'}">${(totals[c.id] || 0).toFixed(2)}</span></td>`).join('');
-
-    const txRows = rows.map(tx => {
-      const amts = state.currencies.map(c => {
-        const a = tx.amounts && tx.amounts[c.id] != null ? tx.amounts[c.id] : null;
-        return `<td style="text-align:right">${a != null ? `<span class="${a < 0 ? 'neg' : 'pos'}">${a > 0 ? '+' : ''}${a}</span>` : `<span style="color:var(--border2)">—</span>`}</td>`;
-      }).join('');
-      const bal = state.currencies
-        .filter(c => (tx.running[c.id] || 0) !== 0)
-        .map(c => `<span style="font-size:11px;color:var(--text2)">${tx.running[c.id]}${c.symbol}</span>`)
-        .join(' ');
-      return `<tr>
-        <td style="white-space:nowrap;width:90px;color:var(--text2)">${tx.date}</td>
-        <td>${tx.description}${tx.note ? `<div style="font-size:11px;color:var(--text2)">${tx.note}</div>` : ''}</td>
-        ${amts}
-        <td style="font-size:11px;color:var(--text2);white-space:nowrap">${bal}</td>
-        <td style="text-align:right;white-space:nowrap;width:90px">
-          <button class="btn sm" onclick="editTx('${tx.id}')">Edit</button>
-          <button class="btn sm danger" onclick="deleteTx('${tx.id}')">Del</button>
-        </td>
-      </tr>`;
-    }).join('');
-
-    const dBtn    = `<button class="sort-btn ${txSort.col === 'date'        ? txSort.dir : ''}" onclick="sortTx('date')">Date</button>`;
-    const descBtn = `<button class="sort-btn ${txSort.col === 'description' ? txSort.dir : ''}" onclick="sortTx('description')">Description</button>`;
-
-    return `
-      <div class="section-header">
-        <h2>Transaction ledger</h2>
-        <button class="btn primary" onclick="addTx()">+ Add transaction</button>
-      </div>
-      <div style="overflow-x:auto">
-        <table style="min-width:520px">
-          <thead><tr><th>${dBtn}</th><th>${descBtn}</th>${amtCols}<th style="font-size:11px">Balance</th><th></th></tr></thead>
-          <tbody>${txRows || `<tr><td colspan="9" class="empty">No transactions yet</td></tr>`}</tbody>
-          <tfoot><tr class="tfoot-row">
-            <td colspan="2" style="font-weight:500">Totals</td>
-            ${totalCols}
-            <td style="font-size:11px;color:var(--text2)">${grandGP.toFixed(2)} gp equiv</td>
-            <td></td>
-          </tr></tfoot>
-        </table>
-      </div>`;
-  }
-
-  function sortTx(col) {
-    if (txSort.col === col) txSort.dir = txSort.dir === 'asc' ? 'desc' : 'asc';
-    else { txSort.col = col; txSort.dir = 'asc'; }
-    showTab('transactions', null);
-  }
-
-  /* ── Loot ────────────────────────────────────────────────────────── */
-  function renderItems() {
-    return `
-      <div class="section-header">
-        <h2>Loot tracker</h2>
-        <button class="btn primary" onclick="addItem()">+ Add item</button>
-      </div>
-      <div class="filter-row">
-        <input placeholder="Search…" id="item-search" oninput="filterItems()" style="flex:1;min-width:100px">
-        <select id="item-carrier" onchange="filterItems()">
-          <option value="">All carriers</option>
-          ${state.characters.map(c => `<option>${c}</option>`).join('')}
-        </select>
-        <select id="item-location" onchange="filterItems()">
-          <option value="">All locations</option>
-          ${state.locations.map(l => `<option>${l}</option>`).join('')}
-        </select>
-        <select id="item-notable-filter" onchange="filterItems()">
-          <option value="">All items</option>
-          <option value="notable">Notable only</option>
-          <option value="normal">Normal only</option>
-        </select>
-      </div>
-      <table>
-        <thead><tr>
-          <th style="width:36%"><button class="sort-btn ${itemSort.col === 'name'   ? itemSort.dir : ''}" onclick="sortItems('name')">Name</button></th>
-          <th style="width:18%"><button class="sort-btn ${itemSort.col === 'holder' ? itemSort.dir : ''}" onclick="sortItems('holder')">Held by / stored at</button></th>
-          <th style="width:8%;text-align:center"><button class="sort-btn ${itemSort.col === 'qty' ? itemSort.dir : ''}" onclick="sortItems('qty')">Qty</button></th>
-          <th>Tags</th>
-          <th style="width:13%"></th>
-        </tr></thead>
-        <tbody id="items-body">${buildItemRows(getSortedFilteredItems())}</tbody>
-      </table>`;
-  }
-
-  function getSortedFilteredItems() {
-    const q      = (document.getElementById('item-search')         || { value: '' }).value.toLowerCase();
-    const carrier = (document.getElementById('item-carrier')         || { value: '' }).value;
-    const loc    = (document.getElementById('item-location')        || { value: '' }).value;
-    const nf     = (document.getElementById('item-notable-filter')  || { value: '' }).value;
-
-    let items = state.items.filter(i => {
-      if (q  && !i.name.toLowerCase().includes(q) && !(i.description || '').toLowerCase().includes(q)) return false;
-      if (carrier && i.carrier  !== carrier) return false;
-      if (loc    && i.location  !== loc)     return false;
-      if (nf === 'notable' && !i.notable)    return false;
-      if (nf === 'normal'  &&  i.notable)    return false;
-      return true;
-    });
-
-    items.sort((a, b) => {
-      let av, bv;
-      if      (itemSort.col === 'name')   { av = a.name.toLowerCase(); bv = b.name.toLowerCase(); }
-      else if (itemSort.col === 'qty')    { av = a.qty || 1;           bv = b.qty || 1; }
-      else if (itemSort.col === 'holder') { av = (a.carrier || a.location || '').toLowerCase(); bv = (b.carrier || b.location || '').toLowerCase(); }
-      else                                { av = a.name.toLowerCase(); bv = b.name.toLowerCase(); }
-      if (av < bv) return itemSort.dir === 'asc' ? -1 : 1;
-      if (av > bv) return itemSort.dir === 'asc' ?  1 : -1;
-      return 0;
-    });
-
-    return items;
-  }
-
-  function buildItemRows(items) {
-    if (!items.length) return `<tr><td colspan="5" class="empty">No items found</td></tr>`;
-    return items.map(item => {
-      const loc  = item.carrier  ? `<span class="badge character">${item.carrier}</span>`
-                 : item.location ? `<span class="badge location">${item.location}</span>`
-                 : `<span style="color:var(--text2)">—</span>`;
-      const tags = (item.tags || []).map(t => `<span class="badge neutral">${t}</span>`).join(' ');
-      const notableBadge = item.notable ? `<span class="badge notable">notable</span> ` : '';
-      const srdBadge     = item.srd     ? `<span class="badge srd">SRD</span> `         : '';
-      return `<tr>
-        <td>
-          <span style="font-weight:500">${notableBadge}${srdBadge}${item.name}</span>
-          ${item.description ? `<div style="font-size:11px;color:var(--text2);margin-top:1px">${item.description.slice(0, 120)}${item.description.length > 120 ? '…' : ''}</div>` : ''}
-        </td>
-        <td>${loc}</td>
-        <td style="text-align:center">
-          <input class="qty-input" type="number" min="1" value="${item.qty || 1}" onchange="updateQty('${item.id}', this.value)">
-        </td>
-        <td>${tags}</td>
-        <td style="text-align:right;white-space:nowrap">
-          <button class="btn sm" onclick="editItem('${item.id}')">Edit</button>
-          <button class="btn sm danger" onclick="deleteItem('${item.id}')">Del</button>
-        </td>
-      </tr>`;
-    }).join('');
-  }
-
-  function filterItems() {
-    const el = document.getElementById('items-body');
-    if (el) el.innerHTML = buildItemRows(getSortedFilteredItems());
-  }
-
-  function sortItems(col) {
-    if (itemSort.col === col) itemSort.dir = itemSort.dir === 'asc' ? 'desc' : 'asc';
-    else { itemSort.col = col; itemSort.dir = 'asc'; }
-    filterItems();
-  }
-
-  function updateQty(id, val) {
-    const item = state.items.find(i => i.id === id);
-    if (item) { item.qty = Math.max(1, parseInt(val) || 1); save(); }
-  }
-
-  /* ── Settings ────────────────────────────────────────────────────── */
-  function renderSettings() {
-    const ch    = state.currencies.map(c => `
-      <div class="list-item">
-        <span><strong style="font-weight:500">${c.name}</strong> (${c.symbol}) — 1 ${c.symbol} = ${c.rate} gp</span>
-        <button class="btn sm danger" onclick="deleteCurrency('${c.id}')">Remove</button>
-      </div>`).join('');
-    const charh = state.characters.map(c => `
-      <div class="list-item">
-        <span>${c}</span>
-        <button class="btn sm danger" onclick="deleteChar(${JSON.stringify(c)})">Remove</button>
-      </div>`).join('');
-    const loch  = state.locations.map(l => `
-      <div class="list-item">
-        <span>${l}</span>
-        <button class="btn sm danger" onclick="deleteLoc(${JSON.stringify(l)})">Remove</button>
-      </div>`).join('');
-
-    return `
-      <div class="settings-section">
-        <h3>Campaign</h3>
-        <div class="field">
-          <label>Campaign name</label>
-          <input id="camp-name" value="${state.campaign}" oninput="state.campaign=this.value;save();document.getElementById('campaign-title').textContent=this.value">
-        </div>
-      </div>
-      <div class="settings-section">
-        <h3>Currencies</h3>${ch}
-        <div class="add-inline">
-          <input id="nc-name" placeholder="Name">
-          <input id="nc-sym"  placeholder="Symbol" style="width:72px">
-          <input id="nc-rate" placeholder="GP rate" style="width:80px" type="number" step="0.01">
-          <button class="btn" onclick="addCurrency()">Add</button>
-        </div>
-      </div>
-      <div class="settings-section">
-        <h3>Characters</h3>${charh}
-        <div class="add-inline">
-          <input id="new-char" placeholder="Character name">
-          <button class="btn" onclick="addChar()">Add</button>
-        </div>
-      </div>
-      <div class="settings-section">
-        <h3>Locations</h3>${loch}
-        <div class="add-inline">
-          <input id="new-loc" placeholder="Location name">
-          <button class="btn" onclick="addLoc()">Add</button>
-        </div>
-      </div>
-      <div class="settings-section">
-        <h3>Data</h3>
-        <button class="btn danger" onclick="if(confirm('Reset ALL data to defaults?')){state=JSON.parse(JSON.stringify(DEFAULT));save();showTab('dashboard',document.querySelector('.nav button'))}">
-          Reset to defaults
-        </button>
-      </div>`;
-  }
-
-  /* ── Modals ──────────────────────────────────────────────────────── */
-  function openModal(html) {
-    document.getElementById('modal-container').innerHTML =
-      `<div class="modal-bg" onclick="if(event.target===this)closeModal()">${html}</div>`;
-  }
-  function closeModal() { document.getElementById('modal-container').innerHTML = ''; }
-
-  /* ── Transaction modal ───────────────────────────────────────────── */
-  function txForm(tx) {
-    const amtFields = state.currencies.map(c => `
-      <div class="amount-entry">
-        <label>${c.name} (${c.symbol})</label>
-        <input type="number" step="any" value="${tx && tx.amounts && tx.amounts[c.id] != null ? tx.amounts[c.id] : ''}" id="amt-${c.id}" placeholder="0">
-      </div>`).join('');
-    return `<div class="modal">
-      <h3>${tx ? 'Edit' : 'Add'} transaction</h3>
-      <div class="field"><label>Date</label><input type="date" id="tx-date" value="${tx ? tx.date : new Date().toISOString().slice(0, 10)}"></div>
-      <div class="field"><label>Description</label><input id="tx-desc" value="${tx ? tx.description : ''}" placeholder="e.g. Sold goblin loot"></div>
-      <div class="field"><label>Amounts (negative = expense)</label><div class="amount-grid">${amtFields}</div></div>
-      <div class="field"><label>Note (optional)</label><textarea id="tx-note">${tx ? tx.note || '' : ''}</textarea></div>
-      <div class="modal-footer">
-        <button class="btn" onclick="closeModal()">Cancel</button>
-        <button class="btn primary" onclick="saveTx('${tx ? tx.id : ''}')">Save</button>
-      </div>
-    </div>`;
-  }
-
-  function addTx()     { openModal(txForm(null)); }
-  function editTx(id)  { openModal(txForm(state.transactions.find(t => t.id === id))); }
-
-  function saveTx(id) {
-    const date = document.getElementById('tx-date').value;
-    const desc = document.getElementById('tx-desc').value.trim();
-    if (!desc) return alert('Please enter a description');
-    const amounts = {};
-    state.currencies.forEach(c => {
-      const v = parseFloat(document.getElementById('amt-' + c.id).value);
-      if (!isNaN(v) && v !== 0) amounts[c.id] = v;
-    });
-    const note = document.getElementById('tx-note').value;
-    if (id) {
-      const t = state.transactions.find(x => x.id === id);
-      Object.assign(t, { date, description: desc, amounts, note });
-    } else {
-      state.transactions.push({ id: uid(), date, description: desc, amounts, note });
-    }
-    save(); closeModal(); showTab('transactions', null);
-  }
-
-  function deleteTx(id) {
-    if (confirm('Delete this transaction?')) {
-      state.transactions = state.transactions.filter(t => t.id !== id);
-      save(); showTab('transactions', null);
-    }
-  }
-
-  /* ── Item modal ──────────────────────────────────────────────────── */
-  let _pendingSrd = false;
-  let _srdTimeout = null;
-
-  function itemForm(item) {
-    const carrierOpts = `<option value="">— none —</option>` +
-      state.characters.map(c => `<option${item && item.carrier === c ? ' selected' : ''}>${c}</option>`).join('');
-    const locOpts = `<option value="">— none —</option>` +
-      state.locations.map(l => `<option${item && item.location === l ? ' selected' : ''}>${l}</option>`).join('');
-    return `<div class="modal">
-      <h3>${item ? 'Edit' : 'Add'} item</h3>
-      <div class="field">
-        <label>Name ${srdLoaded ? '<span style="color:var(--purple);font-size:10px">(SRD autocomplete active)</span>' : ''}</label>
-        <div class="srd-autocomplete">
-          <input id="item-name" value="${item ? item.name.replace(/"/g, '&quot;') : ''}" placeholder="Item name" autocomplete="off" oninput="onSrdInput(this.value)">
-          <div class="srd-dropdown" id="srd-dropdown" style="display:none"></div>
-        </div>
-      </div>
-      <div class="field"><label>Description</label><textarea id="item-desc">${item ? item.description || '' : ''}</textarea></div>
-      <div class="field"><label>Quantity</label><input type="number" min="1" id="item-qty" value="${item && item.qty ? item.qty : 1}" style="width:80px"></div>
-      <div class="field"><label>Carried by (character)</label><select id="item-carrier-sel">${carrierOpts}</select></div>
-      <div class="field"><label>Stored at (location)</label><select id="item-loc-sel">${locOpts}</select></div>
-      <div class="field"><label>Tags (comma separated)</label><input id="item-tags" value="${item && item.tags ? item.tags.join(', ') : ''}"></div>
-      <div class="field" style="display:flex;align-items:center;gap:8px">
-        <input type="checkbox" id="item-notable" ${item && item.notable ? 'checked' : ''}>
-        <label for="item-notable" style="font-size:13px;color:var(--text)">Mark as notable item</label>
-      </div>
-      <div class="modal-footer">
-        <button class="btn" onclick="closeModal()">Cancel</button>
-        <button class="btn primary" onclick="saveItem('${item ? item.id : ''}')">Save</button>
-      </div>
-    </div>`;
-  }
-
-  function onSrdInput(val) {
-    clearTimeout(_srdTimeout);
-    const dd = document.getElementById('srd-dropdown');
-    if (!dd) return;
-    if (!val || val.length < 2 || !srdLoaded) { dd.style.display = 'none'; return; }
-    _srdTimeout = setTimeout(() => {
-      const matches = srdItems.filter(i => i.name.toLowerCase().includes(val.toLowerCase())).slice(0, 8);
-      if (!matches.length) { dd.style.display = 'none'; return; }
-      dd.innerHTML = matches.map(m =>
-        `<div class="srd-option" onclick="selectSrdItem(${JSON.stringify(m.name)}, ${JSON.stringify(m.description)}, ${JSON.stringify(m.tags.join(', '))})">${m.name}</div>`
-      ).join('');
-      dd.style.display = 'block';
-    }, 150);
-  }
-
-  function selectSrdItem(name, desc, tags) {
-    const ni = document.getElementById('item-name');
-    const di = document.getElementById('item-desc');
-    const ti = document.getElementById('item-tags');
-    const dd = document.getElementById('srd-dropdown');
-    if (ni) ni.value = name;
-    if (di && !di.value) di.value = desc;
-    if (ti && !ti.value) ti.value = tags;
-    if (dd) dd.style.display = 'none';
-    _pendingSrd = true;
-  }
-
-  function addItem()    { openModal(itemForm(null)); }
-  function editItem(id) { openModal(itemForm(state.items.find(i => i.id === id))); }
-
-  function saveItem(id) {
-    const name  = document.getElementById('item-name').value.trim();
-    if (!name) return alert('Please enter an item name');
-    const description = document.getElementById('item-desc').value.trim();
-    const qty         = Math.max(1, parseInt(document.getElementById('item-qty').value) || 1);
-    const carrier     = document.getElementById('item-carrier-sel').value || null;
-    const location    = carrier ? null : (document.getElementById('item-loc-sel').value || null);
-    const tags        = document.getElementById('item-tags').value.split(',').map(t => t.trim()).filter(Boolean);
-    const notable     = document.getElementById('item-notable').checked;
-    const srd         = _pendingSrd || false;
-    _pendingSrd = false;
-
-    if (id) {
-      const i = state.items.find(x => x.id === id);
-      Object.assign(i, { name, description, qty, carrier, location, tags, notable });
-    } else {
-      state.items.push({ id: uid(), name, description, qty, carrier, location, tags, notable, srd });
-    }
-    save(); closeModal(); showTab('items', null);
-  }
-
-  function deleteItem(id) {
-    if (confirm('Delete this item?')) {
-      state.items = state.items.filter(i => i.id !== id);
-      save(); showTab('items', null);
-    }
-  }
-
-  /* ── Settings actions ────────────────────────────────────────────── */
-  function addCurrency() {
-    const name   = document.getElementById('nc-name').value.trim();
-    const symbol = document.getElementById('nc-sym').value.trim();
-    const rate   = parseFloat(document.getElementById('nc-rate').value);
-    if (!name || !symbol || isNaN(rate)) return alert('Fill in all currency fields');
-    state.currencies.push({ id: uid(), name, symbol, rate });
-    save(); showTab('settings', null);
-  }
-  function deleteCurrency(id) { state.currencies = state.currencies.filter(c => c.id !== id); save(); showTab('settings', null); }
-  function addChar()          { const v = document.getElementById('new-char').value.trim(); if (!v) return; state.characters.push(v);    save(); showTab('settings', null); }
-  function deleteChar(n)      { state.characters = state.characters.filter(c => c !== n);   save(); showTab('settings', null); }
-  function addLoc()           { const v = document.getElementById('new-loc').value.trim();  if (!v) return; state.locations.push(v);     save(); showTab('settings', null); }
-  function deleteLoc(n)       { state.locations  = state.locations.filter(l => l !== n);    save(); showTab('settings', null); }
-
-  /* ── Import / Export ─────────────────────────────────────────────── */
-  function exportData() {
-    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-    const a    = document.createElement('a');
-    a.href     = URL.createObjectURL(blob);
-    a.download = (state.campaign.replace(/\s+/g, '-').toLowerCase() || 'loot') + '-tracker.json';
-    a.click();
-  }
-
-  function importData() { document.getElementById('file-input').click(); }
-
-  function handleImport(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const r = new FileReader();
-    r.onload = ev => {
+async function loadSRD(){
+  const el = document.getElementById('srd-status');
+  if(el) el.textContent = 'Loading SRD…';
+  try {
+    const r = await fetch('https://www.dnd5eapi.co/api/magic-items?limit=500');
+    const d = await r.json();
+    const list = d.results || [];
+    const details = await Promise.all(list.slice(0,300).map(async item => {
       try {
-        const d = JSON.parse(ev.target.result);
-        if (!d.currencies || !d.transactions || !d.items) return alert('Invalid loot tracker file');
-        state = d;
-        save();
-        document.getElementById('campaign-title').textContent = state.campaign;
-        showTab('dashboard', document.querySelector('.nav button'));
-      } catch { alert('Could not parse JSON file'); }
-    };
-    r.readAsText(file);
-    e.target.value = '';
+        const r2 = await fetch('https://www.dnd5eapi.co/api/magic-items/'+item.index);
+        const d2 = await r2.json();
+        return {
+          name: d2.name,
+          description: (d2.desc||[]).join(' '),
+          tags: [d2.equipment_category?.name?.toLowerCase()||'magic', d2.rarity?.name?.toLowerCase()||''].filter(Boolean),
+          index: item.index
+        };
+      } catch { return {name:item.name,description:'',tags:['magic'],index:item.index}; }
+    }));
+    srdItems = details.filter(Boolean);
+    srdLoaded = true;
+    if(el) el.textContent = srdItems.length+' SRD items loaded';
+    setTimeout(()=>{ if(el) el.textContent=''; }, 3000);
+  } catch {
+    if(el) el.textContent = 'SRD unavailable (offline)';
+    setTimeout(()=>{ if(el) el.textContent=''; }, 4000);
   }
+}
 
-  /* ── Init ────────────────────────────────────────────────────────── */
-  showTab('dashboard', document.querySelector('.nav button'));
-  loadSRD();
+function totalsPerCurrency(){
+  const t = {};
+  state.currencies.forEach(c => t[c.id] = 0);
+  state.transactions.forEach(tx => {
+    Object.entries(tx.amounts||{}).forEach(([cid,amt]) => { if(t[cid]!==undefined) t[cid]+=amt; });
+  });
+  return t;
+}
+function grandTotalGP(){ return state.currencies.reduce((s,c) => s+(totalsPerCurrency()[c.id]||0)*c.rate, 0); }
+
+function showTab(tab, btn){
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  const c = document.getElementById('content');
+  if     (tab==='dashboard')    c.innerHTML = renderDashboard();
+  else if(tab==='transactions') c.innerHTML = renderTransactions();
+  else if(tab==='items')        c.innerHTML = renderItems();
+  else if(tab==='settings')     c.innerHTML = renderSettings();
+}
+
+function renderDashboard(){
+  const t=totalsPerCurrency(), gp=grandTotalGP();
+  let mh = state.currencies.map(c => {
+    const v=t[c.id]||0;
+    return `<div class="metric"><div class="metric-label">${c.name}</div><div class="metric-value ${v<0?'neg':''}">${v.toLocaleString()} <span style="font-size:12px;font-weight:400">${c.symbol}</span></div></div>`;
+  }).join('');
+  mh += `<div class="metric" style="border:0.5px solid rgba(83,74,183,0.25)"><div class="metric-label">Total (gp equiv)</div><div class="metric-value ${gp<0?'neg':''}">${gp.toFixed(2)} <span style="font-size:12px;font-weight:400">gp</span></div></div>`;
+  const notable = state.items.filter(i=>i.notable);
+  const nh = notable.length
+    ? notable.map(i=>`<tr><td><span style="font-weight:500">${i.name}</span>${i.qty>1?` <span class="badge neutral">×${i.qty}</span>`:''}</td><td>${i.carrier?`<span class="badge character">${i.carrier}</span>`:i.location?`<span class="badge location">${i.location}</span>`:'<span style="color:var(--text-secondary)">—</span>'}</td></tr>`).join('')
+    : `<tr><td colspan="2" class="empty">No notable items yet</td></tr>`;
+  const recent = [...state.transactions].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,5);
+  const rh = recent.length
+    ? recent.map(tx=>{
+        const parts = Object.entries(tx.amounts||{}).map(([cid,a])=>`<span class="${a<0?'neg':'pos'}">${a>0?'+':''}${a} ${cid}</span>`).join(' ');
+        return `<tr><td style="color:var(--text-secondary);white-space:nowrap;width:90px">${tx.date}</td><td>${tx.description}</td><td style="text-align:right;white-space:nowrap">${parts}</td></tr>`;
+      }).join('')
+    : `<tr><td colspan="3" class="empty">No transactions yet</td></tr>`;
+  return `<div class="metrics">${mh}</div>
+    <div class="dashboard-grid">
+      <div><div class="section-header"><h2>Notable loot</h2><span style="font-size:12px;color:var(--text-secondary)">${notable.length} item${notable.length!==1?'s':''}</span></div>
+        <table><thead><tr><th>Item</th><th>Held by / stored at</th></tr></thead><tbody>${nh}</tbody></table></div>
+      <div><div class="section-header"><h2>Recent transactions</h2></div>
+        <table><thead><tr><th>Date</th><th>Description</th><th style="text-align:right">Amount</th></tr></thead><tbody>${rh}</tbody></table></div>
+    </div>`;
+}
+
+function getTransactionsWithRunningBalance(){
+  const sorted = [...state.transactions].sort((a,b)=>a.date.localeCompare(b.date)||a.id.localeCompare(b.id));
+  const running = {};
+  state.currencies.forEach(c=>running[c.id]=0);
+  return sorted.map(tx=>{
+    Object.entries(tx.amounts||{}).forEach(([cid,amt])=>{ if(running[cid]!==undefined) running[cid]+=amt; });
+    return {...tx, running:{...running}};
+  });
+}
+
+function renderTransactions(){
+  let rows = getTransactionsWithRunningBalance();
+  if(txSort.col==='date')        rows.sort((a,b)=>a.date.localeCompare(b.date)*(txSort.dir==='asc'?1:-1));
+  else if(txSort.col==='description') rows.sort((a,b)=>a.description.localeCompare(b.description)*(txSort.dir==='asc'?1:-1));
+  const totals=totalsPerCurrency(), grandGP=grandTotalGP();
+  const sb=(col,lbl)=>`<button class="sort-btn ${txSort.col===col?txSort.dir:''}" onclick="sortTx('${col}')">${lbl}</button>`;
+  const amtCols   = state.currencies.map(c=>`<th style="text-align:right">${sb(c.id,c.symbol)}</th>`).join('');
+  const totalCols = state.currencies.map(c=>{const v=totals[c.id]||0;return`<td style="text-align:right"><span class="${v<0?'neg':'pos'}">${v%1===0?v:v.toFixed(2)}</span></td>`;}).join('');
+  const txRows = rows.map(tx=>{
+    const amts = state.currencies.map(c=>{
+      const a=tx.amounts&&tx.amounts[c.id]!=null?tx.amounts[c.id]:null;
+      return `<td style="text-align:right">${a!=null?`<span class="${a<0?'neg':'pos'}">${a>0?'+':''}${a}</span>`:`<span style="opacity:0.3">—</span>`}</td>`;
+    }).join('');
+    const bal = state.currencies.filter(c=>(tx.running[c.id]||0)!==0).map(c=>`<span style="font-size:11px;color:var(--text-secondary)">${tx.running[c.id]}${c.symbol}</span>`).join(' ');
+    return `<tr>
+      <td style="white-space:nowrap;width:88px;color:var(--text-secondary)">${tx.date}</td>
+      <td>${tx.description}${tx.note?`<div style="font-size:11px;color:var(--text-secondary)">${tx.note}</div>`:''}</td>
+      ${amts}
+      <td style="font-size:11px;white-space:nowrap">${bal}</td>
+      <td style="text-align:right;white-space:nowrap;width:90px">
+        <button class="btn sm" onclick="editTx('${tx.id}')">Edit</button>
+        <button class="btn sm danger" onclick="deleteTx('${tx.id}')">Del</button>
+      </td></tr>`;
+  }).join('');
+  return `<div class="section-header"><h2>Transaction ledger</h2><button class="btn primary" onclick="addTx()">+ Add transaction</button></div>
+    <div class="table-wrap"><table style="min-width:520px">
+      <thead><tr><th>${sb('date','Date')}</th><th>${sb('description','Description')}</th>${amtCols}<th style="font-size:11px">Balance</th><th></th></tr></thead>
+      <tbody>${txRows||`<tr><td colspan="8" class="empty">No transactions yet</td></tr>`}</tbody>
+      <tfoot><tr><td colspan="2" style="font-weight:500">Totals</td>${totalCols}<td style="font-size:11px;color:var(--text-secondary)">${grandGP.toFixed(2)} gp equiv</td><td></td></tr></tfoot>
+    </table></div>`;
+}
+
+function sortTx(col){ txSort.col===col?(txSort.dir=txSort.dir==='asc'?'desc':'asc'):(txSort={col,dir:'asc'}); showTab('transactions',null); }
+
+function renderItems(){
+  return `<div class="section-header"><h2>Loot tracker</h2><button class="btn primary" onclick="addItem()">+ Add item</button></div>
+    <div class="filter-row">
+      <input placeholder="Search…" id="item-search" oninput="filterItems()" style="flex:1;min-width:100px">
+      <select id="item-carrier" onchange="filterItems()"><option value="">All carriers</option>${state.characters.map(c=>`<option>${c}</option>`).join('')}</select>
+      <select id="item-location" onchange="filterItems()"><option value="">All locations</option>${state.locations.map(l=>`<option>${l}</option>`).join('')}</select>
+      <select id="item-notable-filter" onchange="filterItems()"><option value="">All items</option><option value="notable">Notable only</option><option value="normal">Normal only</option></select>
+    </div>
+    <table><thead><tr>
+      <th style="width:38%">${isb('name','Name')}</th>
+      <th style="width:18%">${isb('holder','Held by / stored at')}</th>
+      <th style="width:8%;text-align:center">${isb('qty','Qty')}</th>
+      <th>Tags</th><th style="width:13%"></th>
+    </tr></thead><tbody id="items-body">${buildItemRows(getSortedFilteredItems())}</tbody></table>`;
+}
+
+function isb(col,lbl){ return `<button class="sort-btn ${itemSort.col===col?itemSort.dir:''}" onclick="sortItems('${col}')">${lbl}</button>`; }
+
+function getSortedFilteredItems(){
+  const q=(document.getElementById('item-search')||{value:''}).value.toLowerCase();
+  const carrier=(document.getElementById('item-carrier')||{value:''}).value;
+  const loc=(document.getElementById('item-location')||{value:''}).value;
+  const nf=(document.getElementById('item-notable-filter')||{value:''}).value;
+  let items=state.items.filter(i=>{
+    if(q&&!i.name.toLowerCase().includes(q)&&!(i.description||'').toLowerCase().includes(q))return false;
+    if(carrier&&i.carrier!==carrier)return false;
+    if(loc&&i.location!==loc)return false;
+    if(nf==='notable'&&!i.notable)return false;
+    if(nf==='normal'&&i.notable)return false;
+    return true;
+  });
+  items.sort((a,b)=>{
+    let av,bv;
+    if(itemSort.col==='name')  {av=a.name.toLowerCase();bv=b.name.toLowerCase();}
+    else if(itemSort.col==='qty')   {av=a.qty||1;bv=b.qty||1;}
+    else if(itemSort.col==='holder'){av=(a.carrier||a.location||'').toLowerCase();bv=(b.carrier||b.location||'').toLowerCase();}
+    else{av=a.name.toLowerCase();bv=b.name.toLowerCase();}
+    return av<bv?(itemSort.dir==='asc'?-1:1):av>bv?(itemSort.dir==='asc'?1:-1):0;
+  });
+  return items;
+}
+
+function buildItemRows(items){
+  if(!items.length) return `<tr><td colspan="5" class="empty">No items found</td></tr>`;
+  return items.map(item=>{
+    const loc=item.carrier?`<span class="badge character">${item.carrier}</span>`:item.location?`<span class="badge location">${item.location}</span>`:`<span style="color:var(--text-secondary)">—</span>`;
+    const tags=(item.tags||[]).map(t=>`<span class="badge neutral">${t}</span>`).join(' ');
+    const nb=item.notable?`<span class="badge notable">notable</span> `:'';
+    const sb=item.srd?`<span class="badge srd">SRD</span> `:'';
+    const desc=item.description?`<div style="font-size:11px;color:var(--text-secondary);margin-top:1px">${item.description.slice(0,130)}${item.description.length>130?'…':''}</div>`:'';
+    return `<tr>
+      <td><span style="font-weight:500">${nb}${sb}${item.name}</span>${desc}</td>
+      <td>${loc}</td>
+      <td style="text-align:center"><input class="qty-input" type="number" min="1" value="${item.qty||1}" onchange="updateQty('${item.id}',this.value)"></td>
+      <td>${tags}</td>
+      <td style="text-align:right;white-space:nowrap"><button class="btn sm" onclick="editItem('${item.id}')">Edit</button> <button class="btn sm danger" onclick="deleteItem('${item.id}')">Del</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterItems(){ const el=document.getElementById('items-body'); if(el) el.innerHTML=buildItemRows(getSortedFilteredItems()); }
+function sortItems(col){ itemSort.col===col?(itemSort.dir=itemSort.dir==='asc'?'desc':'asc'):(itemSort={col,dir:'asc'}); filterItems(); }
+function updateQty(id,val){ const item=state.items.find(i=>i.id===id); if(item){item.qty=Math.max(1,parseInt(val)||1);save();} }
+
+function renderSettings(){
+  const ch=state.currencies.map(c=>`<div class="list-item"><span><strong style="font-weight:500">${c.name}</strong> (${c.symbol}) — 1 ${c.symbol} = ${c.rate} gp</span><button class="btn sm danger" onclick="deleteCurrency('${c.id}')">Remove</button></div>`).join('');
+  const charh=state.characters.map((c,i)=>`<div class="list-item"><span>${c}</span><button class="btn sm danger" onclick="deleteChar(${i})">Remove</button></div>`).join('');
+  const loch=state.locations.map((l,i)=>`<div class="list-item"><span>${l}</span><button class="btn sm danger" onclick="deleteLoc(${i})">Remove</button></div>`).join('');
+  return `
+    <div class="settings-section"><h3>Campaign</h3>
+      <div class="field"><label>Campaign name</label><input id="camp-name" value="${state.campaign}" oninput="state.campaign=this.value;save();document.getElementById('campaign-title').textContent=this.value"></div>
+    </div>
+    <div class="settings-section"><h3>Currencies</h3>${ch}
+      <div class="add-inline"><input id="nc-name" placeholder="Name"><input id="nc-sym" placeholder="Symbol" style="width:72px"><input id="nc-rate" placeholder="GP rate" style="width:80px" type="number" step="0.01"><button class="btn" onclick="addCurrency()">Add</button></div>
+    </div>
+    <div class="settings-section"><h3>Characters</h3>${charh}
+      <div class="add-inline"><input id="new-char" placeholder="Character name"><button class="btn" onclick="addChar()">Add</button></div>
+    </div>
+    <div class="settings-section"><h3>Locations</h3>${loch}
+      <div class="add-inline"><input id="new-loc" placeholder="Location name"><button class="btn" onclick="addLoc()">Add</button></div>
+    </div>
+    <div class="settings-section"><h3>Data</h3>
+      <button class="btn danger" onclick="resetData()">Reset to defaults</button>
+    </div>`;
+}
+
+function resetData(){ if(!confirm('Reset ALL data to defaults? This cannot be undone.'))return; state=JSON.parse(JSON.stringify(DEFAULT)); save(); document.getElementById('campaign-title').textContent=state.campaign; showTab('dashboard',document.querySelector('.nav button')); }
+
+function openModal(html){ document.getElementById('modal-container').innerHTML=`<div class="modal-bg" onclick="if(event.target===this)closeModal()">${html}</div>`; }
+function closeModal(){ document.getElementById('modal-container').innerHTML=''; }
+
+function txForm(tx){
+  const amtFields=state.currencies.map(c=>`<div class="amount-entry"><label>${c.name} (${c.symbol})</label><input type="number" step="any" value="${tx&&tx.amounts&&tx.amounts[c.id]!=null?tx.amounts[c.id]:''}" id="amt-${c.id}" placeholder="0"></div>`).join('');
+  return `<div class="modal"><h3>${tx?'Edit':'Add'} transaction</h3>
+    <div class="field"><label>Date</label><input type="date" id="tx-date" value="${tx?tx.date:new Date().toISOString().slice(0,10)}"></div>
+    <div class="field"><label>Description</label><input id="tx-desc" value="${tx?tx.description:''}" placeholder="e.g. Sold goblin loot"></div>
+    <div class="field"><label>Amounts (negative = expense)</label><div class="amount-grid">${amtFields}</div></div>
+    <div class="field"><label>Note (optional)</label><textarea id="tx-note">${tx?tx.note||'':''}</textarea></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveTx('${tx?tx.id:''}')">Save</button></div>
+  </div>`;
+}
+function addTx(){ openModal(txForm(null)); }
+function editTx(id){ openModal(txForm(state.transactions.find(t=>t.id===id))); }
+function saveTx(id){
+  const date=document.getElementById('tx-date').value;
+  const desc=document.getElementById('tx-desc').value.trim();
+  if(!desc)return alert('Please enter a description');
+  const amounts={};
+  state.currencies.forEach(c=>{const v=parseFloat(document.getElementById('amt-'+c.id).value);if(!isNaN(v)&&v!==0)amounts[c.id]=v;});
+  const note=document.getElementById('tx-note').value;
+  if(id){const t=state.transactions.find(x=>x.id===id);Object.assign(t,{date,description:desc,amounts,note});}
+  else state.transactions.push({id:uid(),date,description:desc,amounts,note});
+  save();closeModal();showTab('transactions',null);
+}
+function deleteTx(id){ if(!confirm('Delete this transaction?'))return; state.transactions=state.transactions.filter(t=>t.id!==id); save();showTab('transactions',null); }
+
+let _srdTimeout=null, _pendingSrd=false;
+
+function itemForm(item){
+  const carrierOpts=`<option value="">— none —</option>`+state.characters.map(c=>`<option${item&&item.carrier===c?' selected':''}>${c}</option>`).join('');
+  const locOpts=`<option value="">— none —</option>`+state.locations.map(l=>`<option${item&&item.location===l?' selected':''}>${l}</option>`).join('');
+  const srdHint=srdLoaded?`<span style="color:var(--badge-srd-text);font-size:10px;margin-left:4px">(SRD autocomplete active)</span>`:'';
+  return `<div class="modal"><h3>${item?'Edit':'Add'} item</h3>
+    <div class="field"><label>Name${srdHint}</label>
+      <div class="srd-autocomplete">
+        <input id="item-name" value="${item?item.name.replace(/"/g,'&quot;'):''}" placeholder="Item name" autocomplete="off" oninput="onSrdInput(this.value)">
+        <div class="srd-dropdown" id="srd-dropdown" style="display:none"></div>
+      </div>
+    </div>
+    <div class="field"><label>Description</label><textarea id="item-desc">${item?item.description||'':''}</textarea></div>
+    <div class="field"><label>Quantity</label><input type="number" min="1" id="item-qty" value="${item&&item.qty?item.qty:1}" style="width:80px"></div>
+    <div class="field"><label>Carried by (character)</label><select id="item-carrier-sel">${carrierOpts}</select></div>
+    <div class="field"><label>Stored at (location)</label><select id="item-loc-sel">${locOpts}</select></div>
+    <div class="field"><label>Tags (comma separated)</label><input id="item-tags" value="${item&&item.tags?item.tags.join(', '):''}"></div>
+    <div class="field" style="display:flex;align-items:center;gap:8px">
+      <input type="checkbox" id="item-notable" ${item&&item.notable?'checked':''}>
+      <label for="item-notable" style="font-size:13px;color:var(--text-primary)">Mark as notable item</label>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveItem('${item?item.id:''}')">Save</button></div>
+  </div>`;
+}
+
+function onSrdInput(val){
+  clearTimeout(_srdTimeout);
+  const dd=document.getElementById('srd-dropdown');
+  if(!dd)return;
+  if(!val||val.length<2||!srdLoaded){dd.style.display='none';return;}
+  _srdTimeout=setTimeout(()=>{
+    const matches=srdItems.filter(i=>i.name.toLowerCase().includes(val.toLowerCase())).slice(0,8);
+    if(!matches.length){dd.style.display='none';return;}
+    dd.innerHTML=matches.map(m=>`<div class="srd-option" onclick="selectSrdItem(${JSON.stringify(m.name)},${JSON.stringify(m.description)},${JSON.stringify(m.tags.join(', '))})">${m.name}</div>`).join('');
+    dd.style.display='block';
+  },150);
+}
+
+function selectSrdItem(name,desc,tags){
+  const ni=document.getElementById('item-name');
+  const di=document.getElementById('item-desc');
+  const ti=document.getElementById('item-tags');
+  const dd=document.getElementById('srd-dropdown');
+  if(ni)ni.value=name;
+  if(di&&!di.value)di.value=desc;
+  if(ti&&!ti.value)ti.value=tags;
+  if(dd)dd.style.display='none';
+  _pendingSrd=true;
+}
+
+function addItem(){  _pendingSrd=false; openModal(itemForm(null)); }
+function editItem(id){ _pendingSrd=false; openModal(itemForm(state.items.find(i=>i.id===id))); }
+function saveItem(id){
+  const name=document.getElementById('item-name').value.trim();
+  if(!name)return alert('Please enter an item name');
+  const description=document.getElementById('item-desc').value.trim();
+  const qty=Math.max(1,parseInt(document.getElementById('item-qty').value)||1);
+  const carrier=document.getElementById('item-carrier-sel').value||null;
+  const location=carrier?null:(document.getElementById('item-loc-sel').value||null);
+  const tags=document.getElementById('item-tags').value.split(',').map(t=>t.trim()).filter(Boolean);
+  const notable=document.getElementById('item-notable').checked;
+  const srd=_pendingSrd; _pendingSrd=false;
+  if(id){const i=state.items.find(x=>x.id===id);Object.assign(i,{name,description,qty,carrier,location,tags,notable});}
+  else state.items.push({id:uid(),name,description,qty,carrier,location,tags,notable,srd});
+  save();closeModal();showTab('items',null);
+}
+function deleteItem(id){ if(!confirm('Delete this item?'))return; state.items=state.items.filter(i=>i.id!==id); save();showTab('items',null); }
+
+function addCurrency(){ const name=document.getElementById('nc-name').value.trim(); const symbol=document.getElementById('nc-sym').value.trim(); const rate=parseFloat(document.getElementById('nc-rate').value); if(!name||!symbol||isNaN(rate))return alert('Fill in all currency fields'); state.currencies.push({id:uid(),name,symbol,rate}); save();showTab('settings',null); }
+function deleteCurrency(id){ state.currencies=state.currencies.filter(c=>c.id!==id); save();showTab('settings',null); }
+function addChar(){  const v=document.getElementById('new-char').value.trim(); if(!v)return; state.characters.push(v); save();showTab('settings',null); }
+function deleteChar(i){ state.characters.splice(i,1); save();showTab('settings',null); }
+function addLoc(){   const v=document.getElementById('new-loc').value.trim();  if(!v)return; state.locations.push(v);  save();showTab('settings',null); }
+function deleteLoc(i){ state.locations.splice(i,1); save();showTab('settings',null); }
+
+function exportData(){ const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=(state.campaign.replace(/\s+/g,'-').toLowerCase()||'loot')+'-tracker.json'; a.click(); }
+function importData(){ document.getElementById('file-input').click(); }
+function handleImport(e){
+  const file=e.target.files[0]; if(!file)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      if(!d.currencies||!d.transactions||!d.items)return alert('Invalid loot tracker file');
+      state=d;save();
+      document.getElementById('campaign-title').textContent=state.campaign;
+      showTab('dashboard',document.querySelector('.nav button'));
+    }catch{alert('Could not parse JSON file');}
+  };
+  r.readAsText(file); e.target.value='';
+}
+
+showTab('dashboard', document.querySelector('.nav button'));
+loadSRD();
 </script>
 </body>
 </html>
