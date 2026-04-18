@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Loot Tracker</title>
+  <title>D&amp;D Loot Tracker</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -431,7 +431,7 @@ let _srdTimeout=null, _pendingSrd=false;
 function itemForm(item){
   const carrierOpts=`<option value="">— none —</option>`+state.characters.map(c=>`<option${item&&item.carrier===c?' selected':''}>${c}</option>`).join('');
   const locOpts=`<option value="">— none —</option>`+state.locations.map(l=>`<option${item&&item.location===l?' selected':''}>${l}</option>`).join('');
-  const srdHint=srdLoaded?`<span style="color:var(--badge-srd-text);font-size:10px;margin-left:4px">(SRD autocomplete active)</span>`:'';
+  const srdHint=srdLoaded?`<span style="color:var(--purple);font-size:10px;margin-left:4px">(SRD autocomplete active)</span>`:'';
   return `<div class="modal"><h3>${item?'Edit':'Add'} item</h3>
     <div class="field"><label>Name${srdHint}</label>
       <div class="srd-autocomplete">
@@ -439,18 +439,24 @@ function itemForm(item){
         <div class="srd-dropdown" id="srd-dropdown" style="display:none"></div>
       </div>
     </div>
-    <div class="field"><label>Description</label><textarea id="item-desc">${item?item.description||'':''}</textarea></div>
-    <div class="field"><label>Quantity</label><input type="number" min="1" id="item-qty" value="${item&&item.qty?item.qty:1}" style="width:80px"></div>
-    <div class="field"><label>Carried by (character)</label><select id="item-carrier-sel">${carrierOpts}</select></div>
-    <div class="field"><label>Stored at (location)</label><select id="item-loc-sel">${locOpts}</select></div>
-    <div class="field"><label>Tags (comma separated)</label><input id="item-tags" value="${item&&item.tags?item.tags.join(', '):''}"></div>
-    <div class="field" style="display:flex;align-items:center;gap:8px">
-      <input type="checkbox" id="item-notable" ${item&&item.notable?'checked':''}>
-      <label for="item-notable" style="font-size:13px;color:var(--text-primary)">Mark as notable item</label>
+    <div class="field"><label>Description</label><textarea id="item-desc" style="width:100%">${item?item.description||'':''}</textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="field"><label>Quantity</label><input type="number" min="1" id="item-qty" value="${item&&item.qty?item.qty:1}"></div>
+      <div class="field"><label>Carried by</label><select id="item-carrier-sel">${carrierOpts}</select></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="field"><label>Stored at</label><select id="item-loc-sel">${locOpts}</select></div>
+      <div class="field"><label>Tags (comma separated)</label><input id="item-tags" value="${item&&item.tags?item.tags.join(', '):''}"></div>
+    </div>
+    <div class="field" style="display:flex;align-items:center;gap:8px;flex-wrap:nowrap;min-width:0">
+      <input type="checkbox" id="item-notable" style="flex-shrink:0" ${item&&item.notable?'checked':''}>
+      <label for="item-notable" style="font-size:13px;color:var(--text)">Mark as notable item</label>
     </div>
     <div class="modal-footer"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn primary" onclick="saveItem('${item?item.id:''}')">Save</button></div>
   </div>`;
 }
+
+let _srdMatches=[];
 
 function onSrdInput(val){
   clearTimeout(_srdTimeout);
@@ -458,21 +464,23 @@ function onSrdInput(val){
   if(!dd)return;
   if(!val||val.length<2||!srdLoaded){dd.style.display='none';return;}
   _srdTimeout=setTimeout(()=>{
-    const matches=srdItems.filter(i=>i.name.toLowerCase().includes(val.toLowerCase())).slice(0,8);
-    if(!matches.length){dd.style.display='none';return;}
-    dd.innerHTML=matches.map(m=>`<div class="srd-option" onclick="selectSrdItem(${JSON.stringify(m.name)},${JSON.stringify(m.description)},${JSON.stringify(m.tags.join(', '))})">${m.name}</div>`).join('');
+    _srdMatches=srdItems.filter(i=>i.name.toLowerCase().includes(val.toLowerCase())).slice(0,8);
+    if(!_srdMatches.length){dd.style.display='none';return;}
+    dd.innerHTML=_srdMatches.map((m,idx)=>`<div class="srd-option" onclick="selectSrdItem(${idx})">${m.name}</div>`).join('');
     dd.style.display='block';
   },150);
 }
 
-function selectSrdItem(name,desc,tags){
+function selectSrdItem(idx){
+  const m=_srdMatches[idx];
+  if(!m)return;
   const ni=document.getElementById('item-name');
   const di=document.getElementById('item-desc');
   const ti=document.getElementById('item-tags');
   const dd=document.getElementById('srd-dropdown');
-  if(ni)ni.value=name;
-  if(di&&!di.value)di.value=desc;
-  if(ti&&!ti.value)ti.value=tags;
+  if(ni)ni.value=m.name;
+  if(di)di.value=m.description||'';
+  if(ti)ti.value=(m.tags||[]).join(', ');
   if(dd)dd.style.display='none';
   _pendingSrd=true;
 }
