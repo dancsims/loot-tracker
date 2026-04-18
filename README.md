@@ -82,6 +82,4 @@ Magic item data is sourced from the [D&D 5th Edition SRD](https://dnd.wizards.co
 
 - [ ] Item value tracking (gp worth per item)
 - [ ] Session log / notes tab
-- [ ] Party XP tracker
 - [ ] Print-friendly view
-- [ ] PWA / offline support so SRD data is cached locally
