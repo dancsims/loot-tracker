@@ -1,78 +1,85 @@
-import { useState, useEffect } from 'react'
-import type { SrdItem } from '../types'
+import { useState, useEffect } from "react";
+import type { SrdItem } from "../types";
 
-type SrdStatus = 'idle' | 'loading' | 'ready' | 'error'
+type SrdStatus = "idle" | "loading" | "ready" | "error";
 
 interface UseSRDResult {
-  items: SrdItem[]
-  status: SrdStatus
-  statusText: string
+  items: SrdItem[];
+  status: SrdStatus;
+  statusText: string;
 }
 
-const SRD_BASE = 'https://www.dnd5eapi.co/api'
+const SRD_BASE = "https://www.dnd5eapi.co/api";
 
 export function useSRD(): UseSRDResult {
-  const [items, setItems] = useState<SrdItem[]>([])
-  const [status, setStatus] = useState<SrdStatus>('idle')
+  const [items, setItems] = useState<SrdItem[]>([]);
+  const [status, setStatus] = useState<SrdStatus>("idle");
 
   useEffect(() => {
-    let cancelled = false
+    let cancelled = false;
     async function load() {
-      setStatus('loading')
+      setStatus("loading");
       try {
-        const listRes = await fetch(`${SRD_BASE}/magic-items?limit=500`)
-        const listData = (await listRes.json()) as { results: { index: string; name: string }[] }
-        const entries = listData.results ?? []
+        const listRes = await fetch(`${SRD_BASE}/magic-items?limit=500`);
+        const listData = (await listRes.json()) as {
+          results: { index: string; name: string }[];
+        };
+        const entries = listData.results ?? [];
 
         const details = await Promise.all(
-          entries.slice(0, 300).map(async entry => {
+          entries.slice(0, 300).map(async (entry) => {
             try {
-              const r = await fetch(`${SRD_BASE}/magic-items/${entry.index}`)
-              const d = await r.json() as {
-                name: string
-                desc?: string[]
-                equipment_category?: { name: string }
-                rarity?: { name: string }
-              }
+              const r = await fetch(`${SRD_BASE}/magic-items/${entry.index}`);
+              const d = (await r.json()) as {
+                name: string;
+                desc?: string[];
+                equipment_category?: { name: string };
+                rarity?: { name: string };
+              };
               const tags: string[] = [
-                d.equipment_category?.name?.toLowerCase() ?? 'magic',
-                d.rarity?.name?.toLowerCase() ?? '',
-              ].filter(Boolean)
+                d.equipment_category?.name?.toLowerCase() ?? "magic",
+                d.rarity?.name?.toLowerCase() ?? "",
+              ].filter(Boolean);
               return {
                 index: entry.index,
                 name: d.name,
-                description: (d.desc ?? []).join(' '),
+                description: (d.desc ?? []).join(" "),
                 tags,
-              } satisfies SrdItem
+              } satisfies SrdItem;
             } catch {
               return {
                 index: entry.index,
                 name: entry.name,
-                description: '',
-                tags: ['magic'],
-              } satisfies SrdItem
+                description: "",
+                tags: ["magic"],
+              } satisfies SrdItem;
             }
-          })
-        )
+          }),
+        );
 
         if (!cancelled) {
-          setItems(details)
-          setStatus('ready')
+          setItems(details);
+          setStatus("ready");
         }
       } catch {
-        if (!cancelled) setStatus('error')
+        if (!cancelled) setStatus("error");
       }
     }
 
-    void load()
-    return () => { cancelled = true }
-  }, [])
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const statusText =
-    status === 'loading' ? 'Loading SRD…'
-    : status === 'ready'   ? `${items.length} SRD items loaded`
-    : status === 'error'   ? 'SRD unavailable (offline)'
-    : ''
+    status === "loading"
+      ? "Loading SRD…"
+      : status === "ready"
+        ? `${items.length} SRD items loaded`
+        : status === "error"
+          ? "SRD unavailable (offline)"
+          : "";
 
-  return { items, status, statusText }
+  return { items, status, statusText };
 }

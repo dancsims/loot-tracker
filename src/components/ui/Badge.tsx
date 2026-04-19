@@ -1,10 +1,10 @@
-type BadgeVariant = 'character' | 'location' | 'notable' | 'srd' | 'neutral'
+type BadgeVariant = "character" | "location" | "notable" | "srd" | "neutral";
 
 interface BadgeProps {
-  variant?: BadgeVariant
-  children: React.ReactNode
+  variant?: BadgeVariant;
+  children: React.ReactNode;
 }
 
-export function Badge({ variant = 'neutral', children }: BadgeProps) {
-  return <span className={`badge ${variant}`}>{children}</span>
+export function Badge({ variant = "neutral", children }: BadgeProps) {
+  return <span className={`badge ${variant}`}>{children}</span>;
 }

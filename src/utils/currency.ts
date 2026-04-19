@@ -1,4 +1,4 @@
-import type { Currency, Transaction, TransactionWithBalance } from '../types'
+import type { Currency, Transaction, TransactionWithBalance } from "../types";
 
 /**
  * Sums all transaction amounts per currency id.
@@ -6,18 +6,18 @@ import type { Currency, Transaction, TransactionWithBalance } from '../types'
  */
 export function getTotals(
   transactions: Transaction[],
-  currencies: Currency[]
+  currencies: Currency[],
 ): Record<string, number> {
-  const totals: Record<string, number> = {}
-  currencies.forEach(c => (totals[c.id] = 0))
-  transactions.forEach(tx => {
+  const totals: Record<string, number> = {};
+  currencies.forEach((c) => (totals[c.id] = 0));
+  transactions.forEach((tx) => {
     Object.entries(tx.amounts).forEach(([cid, amt]) => {
       if (cid in totals && amt !== undefined) {
-        totals[cid] += amt
+        totals[cid] += amt;
       }
-    })
-  })
-  return totals
+    });
+  });
+  return totals;
 }
 
 /**
@@ -25,9 +25,9 @@ export function getTotals(
  */
 export function toGrandTotal(
   totals: Record<string, number>,
-  currencies: Currency[]
+  currencies: Currency[],
 ): number {
-  return currencies.reduce((sum, c) => sum + (totals[c.id] ?? 0) * c.rate, 0)
+  return currencies.reduce((sum, c) => sum + (totals[c.id] ?? 0) * c.rate, 0);
 }
 
 /**
@@ -36,28 +36,28 @@ export function toGrandTotal(
  */
 export function getTransactionsWithBalances(
   transactions: Transaction[],
-  currencies: Currency[]
+  currencies: Currency[],
 ): TransactionWithBalance[] {
   const sorted = [...transactions].sort(
-    (a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id)
-  )
-  const running: Record<string, number> = {}
-  currencies.forEach(c => (running[c.id] = 0))
+    (a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id),
+  );
+  const running: Record<string, number> = {};
+  currencies.forEach((c) => (running[c.id] = 0));
 
-  return sorted.map(tx => {
+  return sorted.map((tx) => {
     Object.entries(tx.amounts).forEach(([cid, amt]) => {
       if (cid in running && amt !== undefined) {
-        running[cid] += amt
+        running[cid] += amt;
       }
-    })
-    return { ...tx, running: { ...running } }
-  })
+    });
+    return { ...tx, running: { ...running } };
+  });
 }
 
 /**
  * Formats a number as a signed string: +12 / -5 / 0
  */
 export function formatSigned(n: number): string {
-  if (n > 0) return `+${n}`
-  return String(n)
+  if (n > 0) return `+${n}`;
+  return String(n);
 }
