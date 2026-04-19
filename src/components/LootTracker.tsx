@@ -59,35 +59,35 @@ export function LootTracker({ state, srdItems, srdReady, onAdd, onUpdate, onDele
   }
 
   return (
-    <>
+    <div style={{ minWidth: 700, maxWidth: 900, margin: '0 auto' }}>
       <div className="section-header">
         <h2>Loot tracker</h2>
         <Button variant="primary" onClick={() => setModal('add')}>+ Add item</Button>
       </div>
 
-      <div className="filter-row">
+      <div className="filter-row" style={{ gap: 8 }}>
         <input
           placeholder="Search…"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          style={{ flex: 1, minWidth: 100 }}
+          style={{ flex: 1, minWidth: 120, maxWidth: 220 }}
         />
-        <select value={filterCarrier} onChange={e => setCarrier(e.target.value)}>
+        <select value={filterCarrier} onChange={e => setCarrier(e.target.value)} style={{ minWidth: 120 }}>
           <option value="">All carriers</option>
           {state.characters.map(c => <option key={c}>{c}</option>)}
         </select>
-        <select value={filterLocation} onChange={e => setLoc(e.target.value)}>
+        <select value={filterLocation} onChange={e => setLoc(e.target.value)} style={{ minWidth: 120 }}>
           <option value="">All locations</option>
           {state.locations.map(l => <option key={l}>{l}</option>)}
         </select>
-        <select value={filterNotable} onChange={e => setNotable(e.target.value)}>
+        <select value={filterNotable} onChange={e => setNotable(e.target.value)} style={{ minWidth: 120 }}>
           <option value="">All items</option>
           <option value="notable">Notable only</option>
           <option value="normal">Normal only</option>
         </select>
       </div>
 
-      <table>
+      <table style={{ width: '100%', minWidth: 600 }}>
         <thead>
           <tr>
             <th style={{ width: '36%' }}>
@@ -131,6 +131,7 @@ export function LootTracker({ state, srdItems, srdReady, onAdd, onUpdate, onDele
                     type="number"
                     min={1}
                     value={item.qty}
+                    style={{ width: 56 }}
                     onChange={e => onQtyChange(item.id, parseInt(e.target.value) || 1)}
                   />
                 </td>
@@ -163,6 +164,6 @@ export function LootTracker({ state, srdItems, srdReady, onAdd, onUpdate, onDele
           onClose={() => setModal(null)}
         />
       )}
-    </>
+    </div>
   )
 }

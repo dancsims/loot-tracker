@@ -15,7 +15,7 @@ export function Dashboard({ state }: Props) {
     .slice(0, 5)
 
   return (
-    <>
+    <div style={{ minWidth: 700, maxWidth: 900, margin: '0 auto' }}>
       {/* Currency metrics */}
       <div className="metrics">
         {state.currencies.map(c => {
@@ -23,7 +23,7 @@ export function Dashboard({ state }: Props) {
           return (
             <div className="metric" key={c.id}>
               <div className="metric-label">{c.name}</div>
-              <div className={`metric-value ${v < 0 ? 'neg' : ''}`}>
+              <div className={`metric-value ${v < 0 ? 'neg' : ''}`}> 
                 {v.toLocaleString()}{' '}
                 <span style={{ fontSize: 12, fontWeight: 400 }}>{c.symbol}</span>
               </div>
@@ -48,7 +48,7 @@ export function Dashboard({ state }: Props) {
               {notable.length} item{notable.length !== 1 ? 's' : ''}
             </span>
           </div>
-          <table>
+          <table style={{ width: '100%', minWidth: 280 }}>
             <thead>
               <tr>
                 <th>Item</th>
@@ -80,7 +80,7 @@ export function Dashboard({ state }: Props) {
         {/* Recent transactions */}
         <div>
           <div className="section-header"><h2>Recent transactions</h2></div>
-          <table>
+          <table style={{ width: '100%', minWidth: 320 }}>
             <thead>
               <tr>
                 <th>Date</th>
@@ -111,6 +111,6 @@ export function Dashboard({ state }: Props) {
           </table>
         </div>
       </div>
-    </>
+    </div>
   )
 }

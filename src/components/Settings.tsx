@@ -53,7 +53,7 @@ export function Settings({ state, onUpdate, onReset }: Props) {
   }
 
   return (
-    <>
+    <div style={{ minWidth: 700, maxWidth: 900, margin: '0 auto' }}>
       {/* Campaign name */}
       <div className="settings-section">
         <h3>Campaign</h3>
@@ -61,6 +61,7 @@ export function Settings({ state, onUpdate, onReset }: Props) {
           <label>Campaign name</label>
           <input
             value={state.campaign}
+            style={{ minWidth: 220, maxWidth: 320 }}
             onChange={e => onUpdate({ campaign: e.target.value })}
           />
         </div>
@@ -79,7 +80,7 @@ export function Settings({ state, onUpdate, onReset }: Props) {
           </div>
         ))}
         <div className="add-inline">
-          <input placeholder="Name"      value={newCurrName} onChange={e => setNewCurrName(e.target.value)} />
+          <input placeholder="Name"      value={newCurrName} onChange={e => setNewCurrName(e.target.value)} style={{ minWidth: 100, maxWidth: 140 }} />
           <input placeholder="Symbol"    value={newCurrSym}  onChange={e => setNewCurrSym(e.target.value)}  style={{ width: 72 }} />
           <input placeholder="GP rate"   value={newCurrRate} onChange={e => setNewCurrRate(e.target.value)} style={{ width: 82 }} type="number" step="0.01" />
           <Button onClick={addCurrency}>Add</Button>
@@ -99,6 +100,7 @@ export function Settings({ state, onUpdate, onReset }: Props) {
           <input
             placeholder="Character name"
             value={newChar}
+            style={{ minWidth: 140, maxWidth: 200 }}
             onChange={e => setNewChar(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') addChar() }}
           />
@@ -119,6 +121,7 @@ export function Settings({ state, onUpdate, onReset }: Props) {
           <input
             placeholder="Location name"
             value={newLoc}
+            style={{ minWidth: 140, maxWidth: 200 }}
             onChange={e => setNewLoc(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') addLoc() }}
           />
@@ -136,6 +139,6 @@ export function Settings({ state, onUpdate, onReset }: Props) {
           Reset to defaults
         </Button>
       </div>
-    </>
+    </div>
   )
 }

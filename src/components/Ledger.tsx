@@ -44,14 +44,14 @@ export function Ledger({ state, onAdd, onUpdate, onDelete }: Props) {
   }
 
   return (
-    <>
+    <div style={{ minWidth: 700, maxWidth: 900, margin: '0 auto' }}>
       <div className="section-header">
         <h2>Transaction ledger</h2>
         <Button variant="primary" onClick={() => setModal('add')}>+ Add transaction</Button>
       </div>
 
       <div className="table-wrap">
-        <table style={{ minWidth: 520 }}>
+        <table style={{ minWidth: 600, width: '100%' }}>
           <thead>
             <tr>
               <th><SortButton col="date" sort={sort} onSort={toggleSort}>Date</SortButton></th>
@@ -127,6 +127,6 @@ export function Ledger({ state, onAdd, onUpdate, onDelete }: Props) {
           onClose={() => setModal(null)}
         />
       )}
-    </>
+    </div>
   )
 }
