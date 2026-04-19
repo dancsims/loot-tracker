@@ -484,7 +484,6 @@ tfoot tr td {
   font-family: var(--font);
 }
 
-
 @media (max-width: 900px) {
   .app,
   .content > div,
