@@ -22,6 +22,7 @@ interface Props {
   locations: string[];
   srdItems: SrdItem[];
   srdReady: boolean;
+  fetchItemDetail: (index: string) => Promise<SrdItem | null>;
   onSave: (item: Item) => void;
   onClose: () => void;
 }
@@ -34,6 +35,7 @@ export function ItemModal({
   locations,
   srdItems,
   srdReady,
+  fetchItemDetail,
   onSave,
   onClose,
 }: Props) {
@@ -47,6 +49,7 @@ export function ItemModal({
   const [isSrd, setIsSrd] = useState(item?.srd ?? false);
   const [matches, setMatches] = useState<SrdItem[]>([]);
   const [showDrop, setShowDrop] = useState(false);
+  const [fetching, setFetching] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(
@@ -73,12 +76,17 @@ export function ItemModal({
     }, 150);
   }
 
-  function selectSrd(s: SrdItem) {
-    setName(s.name);
-    setDesc(s.description);
-    setTags(s.tags.join(", "));
-    setIsSrd(true);
+  async function selectSrd(s: SrdItem) {
     setShowDrop(false);
+    setName(s.name);
+    setFetching(true);
+    const detail = await fetchItemDetail(s.index);
+    setFetching(false);
+    if (detail) {
+      setDesc(detail.description);
+      setTags(detail.tags.join(", "));
+    }
+    setIsSrd(true);
   }
 
   function handleSave() {
@@ -109,8 +117,8 @@ export function ItemModal({
       footer={
         <>
           <Button onClick={onClose}>Cancel</Button>
-          <Button variant="primary" onClick={handleSave}>
-            Save
+          <Button variant="primary" onClick={handleSave} disabled={fetching}>
+            {fetching ? "Loading…" : "Save"}
           </Button>
         </>
       }
@@ -136,8 +144,7 @@ export function ItemModal({
             onChange={(e) => onNameChange(e.target.value)}
             placeholder="Item name"
             autoComplete="off"
-            sx={inputSx}
-            inputProps={{ style: { fontSize: 13 } }}
+            disabled={fetching}
           />
           {showDrop && (
             <Paper
@@ -182,8 +189,8 @@ export function ItemModal({
           size="small"
           value={description}
           onChange={(e) => setDesc(e.target.value)}
-          sx={inputSx}
-          inputProps={{ style: { fontSize: 13 } }}
+          style={{ width: "100%" }}
+          disabled={fetching}
         />
       </Field>
 
@@ -196,7 +203,7 @@ export function ItemModal({
               type="number"
               value={qty}
               onChange={(e) => setQty(parseInt(e.target.value) || 1)}
-              inputProps={{ min: 1, style: { fontSize: 13 } }}
+              // inputProps={{ min: 1, style: { fontSize: 13 } }}
               sx={inputSx}
             />
           </Field>
@@ -255,7 +262,7 @@ export function ItemModal({
               onChange={(e) => setTags(e.target.value)}
               placeholder="magic, wondrous"
               sx={inputSx}
-              inputProps={{ style: { fontSize: 13 } }}
+              // inputProps={{ style: { fontSize: 13 } }}
             />
           </Field>
         </Grid>
@@ -269,7 +276,7 @@ export function ItemModal({
             size="small"
           />
         }
-        label={<Typography fontSize={13}>Mark as notable item</Typography>}
+        label={<Typography sx={{ fontSize: 13 }}>Mark as notable item</Typography>}
       />
     </Modal>
   );

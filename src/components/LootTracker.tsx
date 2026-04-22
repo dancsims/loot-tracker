@@ -25,13 +25,23 @@ interface Props {
   state: CampaignState;
   srdItems: SrdItem[];
   srdReady: boolean;
+  fetchItemDetail: (index: string) => Promise<SrdItem | null>;
   onAdd: (item: Item) => void;
   onUpdate: (item: Item) => void;
   onDelete: (id: string) => void;
   onQtyChange: (id: string, qty: number) => void;
 }
 
-export function LootTracker({ state, srdItems, srdReady, onAdd, onUpdate, onDelete, onQtyChange }: Props) {
+export function LootTracker({
+  state,
+  srdItems,
+  srdReady,
+  fetchItemDetail,
+  onAdd,
+  onUpdate,
+  onDelete,
+  onQtyChange,
+}: Props) {
   const [sort, setSort] = useState<SortState>({ col: "name", dir: "asc" });
   const [search, setSearch] = useState("");
   const [filterCarrier, setCarrier] = useState("");
@@ -41,14 +51,21 @@ export function LootTracker({ state, srdItems, srdReady, onAdd, onUpdate, onDele
 
   function toggleSort(col: string) {
     setSort((prev) =>
-      prev.col === col ? { col, dir: prev.dir === "asc" ? "desc" : "asc" } : { col, dir: "asc" },
+      prev.col === col
+        ? { col, dir: prev.dir === "asc" ? "desc" : "asc" }
+        : { col, dir: "asc" },
     );
   }
 
   const filtered = state.items
     .filter((i) => {
       const q = search.toLowerCase();
-      if (q && !i.name.toLowerCase().includes(q) && !i.description.toLowerCase().includes(q)) return false;
+      if (
+        q &&
+        !i.name.toLowerCase().includes(q) &&
+        !i.description.toLowerCase().includes(q)
+      )
+        return false;
       if (filterCarrier && i.carrier !== filterCarrier) return false;
       if (filterLocation && i.location !== filterLocation) return false;
       if (filterNotable === "notable" && !i.notable) return false;
@@ -57,9 +74,16 @@ export function LootTracker({ state, srdItems, srdReady, onAdd, onUpdate, onDele
     })
     .sort((a, b) => {
       let av: string | number, bv: string | number;
-      if (sort.col === "qty") { av = a.qty; bv = b.qty; }
-      else if (sort.col === "holder") { av = (a.carrier ?? a.location ?? "").toLowerCase(); bv = (b.carrier ?? b.location ?? "").toLowerCase(); }
-      else { av = a.name.toLowerCase(); bv = b.name.toLowerCase(); }
+      if (sort.col === "qty") {
+        av = a.qty;
+        bv = b.qty;
+      } else if (sort.col === "holder") {
+        av = (a.carrier ?? a.location ?? "").toLowerCase();
+        bv = (b.carrier ?? b.location ?? "").toLowerCase();
+      } else {
+        av = a.name.toLowerCase();
+        bv = b.name.toLowerCase();
+      }
       if (av < bv) return sort.dir === "asc" ? -1 : 1;
       if (av > bv) return sort.dir === "asc" ? 1 : -1;
       return 0;
@@ -73,9 +97,18 @@ export function LootTracker({ state, srdItems, srdReady, onAdd, onUpdate, onDele
 
   return (
     <Box>
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={1.5}>
-        <Typography fontWeight={500} fontSize={14}>Loot tracker</Typography>
-        <Button variant="primary" onClick={() => setModal("add")}>+ Add item</Button>
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={1.5}
+      >
+        <Typography fontWeight={500} fontSize={14}>
+          Loot tracker
+        </Typography>
+        <Button variant="primary" onClick={() => setModal("add")}>
+          + Add item
+        </Button>
       </Stack>
 
       {/* Filters */}
@@ -93,28 +126,61 @@ export function LootTracker({ state, srdItems, srdReady, onAdd, onUpdate, onDele
         <Grid item xs={6} sm={4} md={3}>
           <FormControl fullWidth size="small">
             <InputLabel sx={{ fontSize: 12 }}>All carriers</InputLabel>
-            <Select value={filterCarrier} label="All carriers" onChange={(e) => setCarrier(e.target.value)} sx={{ fontSize: 12 }}>
-              <MenuItem value=""><em>All carriers</em></MenuItem>
-              {state.characters.map((c) => <MenuItem key={c} value={c} sx={{ fontSize: 12 }}>{c}</MenuItem>)}
+            <Select
+              value={filterCarrier}
+              label="All carriers"
+              onChange={(e) => setCarrier(e.target.value)}
+              sx={{ fontSize: 12 }}
+            >
+              <MenuItem value="">
+                <em>All carriers</em>
+              </MenuItem>
+              {state.characters.map((c) => (
+                <MenuItem key={c} value={c} sx={{ fontSize: 12 }}>
+                  {c}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
         </Grid>
         <Grid item xs={6} sm={4} md={3}>
           <FormControl fullWidth size="small">
             <InputLabel sx={{ fontSize: 12 }}>All locations</InputLabel>
-            <Select value={filterLocation} label="All locations" onChange={(e) => setLoc(e.target.value)} sx={{ fontSize: 12 }}>
-              <MenuItem value=""><em>All locations</em></MenuItem>
-              {state.locations.map((l) => <MenuItem key={l} value={l} sx={{ fontSize: 12 }}>{l}</MenuItem>)}
+            <Select
+              value={filterLocation}
+              label="All locations"
+              onChange={(e) => setLoc(e.target.value)}
+              sx={{ fontSize: 12 }}
+            >
+              <MenuItem value="">
+                <em>All locations</em>
+              </MenuItem>
+              {state.locations.map((l) => (
+                <MenuItem key={l} value={l} sx={{ fontSize: 12 }}>
+                  {l}
+                </MenuItem>
+              ))}
             </Select>
           </FormControl>
         </Grid>
         <Grid item xs={6} sm={4} md={3}>
           <FormControl fullWidth size="small">
             <InputLabel sx={{ fontSize: 12 }}>All items</InputLabel>
-            <Select value={filterNotable} label="All items" onChange={(e) => setNotable(e.target.value)} sx={{ fontSize: 12 }}>
-              <MenuItem value=""><em>All items</em></MenuItem>
-              <MenuItem value="notable" sx={{ fontSize: 12 }}>Notable only</MenuItem>
-              <MenuItem value="normal" sx={{ fontSize: 12 }}>Normal only</MenuItem>
+            <Select
+              value={filterNotable}
+              label="All items"
+              onChange={(e) => setNotable(e.target.value)}
+              sx={{ fontSize: 12 }}
+            >
+              <MenuItem value="">
+                <em>All items</em>
+              </MenuItem>
+              <MenuItem value="notable" sx={{ fontSize: 12 }}>
+                Notable only
+              </MenuItem>
+              <MenuItem value="normal" sx={{ fontSize: 12 }}>
+                Normal only
+              </MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -124,23 +190,59 @@ export function LootTracker({ state, srdItems, srdReady, onAdd, onUpdate, onDele
         <Table size="small" sx={{ minWidth: 600 }}>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ fontSize: 11, fontWeight: 500, color: "text.secondary", width: "36%" }}>
-                <SortButton col="name" sort={sort} onSort={toggleSort}>Name</SortButton>
+              <TableCell
+                sx={{
+                  fontSize: 11,
+                  fontWeight: 500,
+                  color: "text.secondary",
+                  width: "36%",
+                }}
+              >
+                <SortButton col="name" sort={sort} onSort={toggleSort}>
+                  Name
+                </SortButton>
               </TableCell>
-              <TableCell sx={{ fontSize: 11, fontWeight: 500, color: "text.secondary", width: "18%" }}>
-                <SortButton col="holder" sort={sort} onSort={toggleSort}>Held by / stored at</SortButton>
+              <TableCell
+                sx={{
+                  fontSize: 11,
+                  fontWeight: 500,
+                  color: "text.secondary",
+                  width: "18%",
+                }}
+              >
+                <SortButton col="holder" sort={sort} onSort={toggleSort}>
+                  Held by / stored at
+                </SortButton>
               </TableCell>
-              <TableCell align="center" sx={{ fontSize: 11, fontWeight: 500, color: "text.secondary", width: "8%" }}>
-                <SortButton col="qty" sort={sort} onSort={toggleSort}>Qty</SortButton>
+              <TableCell
+                align="center"
+                sx={{
+                  fontSize: 11,
+                  fontWeight: 500,
+                  color: "text.secondary",
+                  width: "8%",
+                }}
+              >
+                <SortButton col="qty" sort={sort} onSort={toggleSort}>
+                  Qty
+                </SortButton>
               </TableCell>
-              <TableCell sx={{ fontSize: 11, fontWeight: 500, color: "text.secondary" }}>Tags</TableCell>
+              <TableCell
+                sx={{ fontSize: 11, fontWeight: 500, color: "text.secondary" }}
+              >
+                Tags
+              </TableCell>
               <TableCell sx={{ width: "13%" }} />
             </TableRow>
           </TableHead>
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ color: "text.secondary", py: 3.5 }}>
+                <TableCell
+                  colSpan={5}
+                  align="center"
+                  sx={{ color: "text.secondary", py: 3.5 }}
+                >
                   No items found
                 </TableCell>
               </TableRow>
@@ -148,14 +250,23 @@ export function LootTracker({ state, srdItems, srdReady, onAdd, onUpdate, onDele
               filtered.map((item) => (
                 <TableRow key={item.id}>
                   <TableCell>
-                    <Stack direction="row" spacing={0.5} flexWrap="wrap" alignItems="center" mb={0.25}>
+                    <Stack
+                      direction="row"
+                      spacing={0.5}
+                      flexWrap="wrap"
+                      alignItems="center"
+                      mb={0.25}
+                    >
                       {item.notable && <Badge variant="notable">notable</Badge>}
                       {item.srd && <Badge variant="srd">SRD</Badge>}
-                      <Typography fontWeight={500} fontSize={13}>{item.name}</Typography>
+                      <Typography fontWeight={500} fontSize={13}>
+                        {item.name}
+                      </Typography>
                     </Stack>
                     {item.description && (
                       <Typography fontSize={11} color="text.secondary">
-                        {item.description.slice(0, 120)}{item.description.length > 120 ? "…" : ""}
+                        {item.description.slice(0, 120)}
+                        {item.description.length > 120 ? "…" : ""}
                       </Typography>
                     )}
                   </TableCell>
@@ -173,19 +284,47 @@ export function LootTracker({ state, srdItems, srdReady, onAdd, onUpdate, onDele
                       type="number"
                       size="small"
                       value={item.qty}
-                      inputProps={{ min: 1, style: { textAlign: "center", width: 44, fontSize: 12, padding: "3px 4px" } }}
-                      onChange={(e) => onQtyChange(item.id, parseInt(e.target.value) || 1)}
+                      inputProps={{
+                        min: 1,
+                        style: {
+                          textAlign: "center",
+                          width: 44,
+                          fontSize: 12,
+                          padding: "3px 4px",
+                        },
+                      }}
+                      onChange={(e) =>
+                        onQtyChange(item.id, parseInt(e.target.value) || 1)
+                      }
                     />
                   </TableCell>
                   <TableCell>
                     <Stack direction="row" spacing={0.5} flexWrap="wrap">
-                      {item.tags.map((t) => <Badge key={t} variant="neutral">{t}</Badge>)}
+                      {item.tags.map((t) => (
+                        <Badge key={t} variant="neutral">
+                          {t}
+                        </Badge>
+                      ))}
                     </Stack>
                   </TableCell>
                   <TableCell align="right">
-                    <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                      <Button size="sm" onClick={() => setModal(item)}>Edit</Button>
-                      <Button size="sm" variant="danger" onClick={() => { if (confirm("Delete this item?")) onDelete(item.id); }}>Del</Button>
+                    <Stack
+                      direction="row"
+                      spacing={0.5}
+                      justifyContent="flex-end"
+                    >
+                      <Button size="sm" onClick={() => setModal(item)}>
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        onClick={() => {
+                          if (confirm("Delete this item?")) onDelete(item.id);
+                        }}
+                      >
+                        Del
+                      </Button>
                     </Stack>
                   </TableCell>
                 </TableRow>
@@ -202,6 +341,7 @@ export function LootTracker({ state, srdItems, srdReady, onAdd, onUpdate, onDele
           locations={state.locations}
           srdItems={srdItems}
           srdReady={srdReady}
+          fetchItemDetail={fetchItemDetail}
           onSave={handleSave}
           onClose={() => setModal(null)}
         />
