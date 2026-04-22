@@ -9,6 +9,7 @@ interface Props {
   state: CampaignState;
   srdItems: SrdItem[];
   srdReady: boolean;
+  fetchItemDetail: (index: string) => Promise<SrdItem | null>;
   onAdd: (item: Item) => void;
   onUpdate: (item: Item) => void;
   onDelete: (id: string) => void;
@@ -19,6 +20,7 @@ export function LootTracker({
   state,
   srdItems,
   srdReady,
+  fetchItemDetail,
   onAdd,
   onUpdate,
   onDelete,
@@ -241,6 +243,7 @@ export function LootTracker({
           locations={state.locations}
           srdItems={srdItems}
           srdReady={srdReady}
+          fetchItemDetail={fetchItemDetail}
           onSave={handleSave}
           onClose={() => setModal(null)}
         />

@@ -15,7 +15,12 @@ export default function App() {
     DEFAULT_STATE,
   );
   const [tab, setTab] = useState<TabId>("dashboard");
-  const { items: srdItems, status: srdStatus, statusText } = useSRD();
+  const {
+    items: srdItems,
+    status: srdStatus,
+    statusText,
+    fetchItemDetail,
+  } = useSRD();
 
   // ── State helpers ────────────────────────────────────────────────
 
@@ -135,6 +140,7 @@ export default function App() {
             state={state}
             srdItems={srdItems}
             srdReady={srdStatus === "ready"}
+            fetchItemDetail={fetchItemDetail}
             onAdd={addItem}
             onUpdate={updateItem}
             onDelete={deleteItem}

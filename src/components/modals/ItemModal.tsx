@@ -10,6 +10,7 @@ interface Props {
   locations: string[];
   srdItems: SrdItem[];
   srdReady: boolean;
+  fetchItemDetail: (index: string) => Promise<SrdItem | null>;
   onSave: (item: Item) => void;
   onClose: () => void;
 }
@@ -20,6 +21,7 @@ export function ItemModal({
   locations,
   srdItems,
   srdReady,
+  fetchItemDetail,
   onSave,
   onClose,
 }: Props) {
@@ -33,6 +35,7 @@ export function ItemModal({
   const [isSrd, setIsSrd] = useState(item?.srd ?? false);
   const [matches, setMatches] = useState<SrdItem[]>([]);
   const [showDrop, setShowDrop] = useState(false);
+  const [fetching, setFetching] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(
@@ -59,12 +62,17 @@ export function ItemModal({
     }, 150);
   }
 
-  function selectSrd(s: SrdItem) {
-    setName(s.name);
-    setDesc(s.description);
-    setTags(s.tags.join(", "));
-    setIsSrd(true);
+  async function selectSrd(s: SrdItem) {
     setShowDrop(false);
+    setName(s.name);
+    setFetching(true);
+    const detail = await fetchItemDetail(s.index);
+    setFetching(false);
+    if (detail) {
+      setDesc(detail.description);
+      setTags(detail.tags.join(", "));
+    }
+    setIsSrd(true);
   }
 
   function handleSave() {
@@ -95,8 +103,8 @@ export function ItemModal({
       footer={
         <>
           <Button onClick={onClose}>Cancel</Button>
-          <Button variant="primary" onClick={handleSave}>
-            Save
+          <Button variant="primary" onClick={handleSave} disabled={fetching}>
+            {fetching ? "Loading…" : "Save"}
           </Button>
         </>
       }
@@ -106,7 +114,7 @@ export function ItemModal({
         hint={
           srdReady ? (
             <span style={{ color: "var(--accent)", fontSize: 10 }}>
-              (SRD autocomplete active)
+              {fetching ? "Fetching SRD data…" : "(SRD autocomplete active)"}
             </span>
           ) : undefined
         }
@@ -117,6 +125,7 @@ export function ItemModal({
             onChange={(e) => onNameChange(e.target.value)}
             placeholder="Item name"
             autoComplete="off"
+            disabled={fetching}
           />
           {showDrop && (
             <div className="srd-dropdown">
@@ -139,6 +148,7 @@ export function ItemModal({
           value={description}
           onChange={(e) => setDesc(e.target.value)}
           style={{ width: "100%" }}
+          disabled={fetching}
         />
       </Field>
 

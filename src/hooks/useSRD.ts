@@ -7,9 +7,10 @@ interface UseSRDResult {
   items: SrdItem[];
   status: SrdStatus;
   statusText: string;
+  fetchItemDetail: (index: string) => Promise<SrdItem | null>;
 }
 
-const SRD_BASE = "https://www.dnd5eapi.co/api";
+const SRD_BASE = "https://www.dnd5eapi.co/api/2014";
 
 export function useSRD(): UseSRDResult {
   const [items, setItems] = useState<SrdItem[]>([]);
@@ -20,45 +21,22 @@ export function useSRD(): UseSRDResult {
     async function load() {
       setStatus("loading");
       try {
-        const listRes = await fetch(`${SRD_BASE}/magic-items?limit=500`);
+        const listRes = await fetch(`${SRD_BASE}/magic-items`);
         const listData = (await listRes.json()) as {
           results: { index: string; name: string }[];
         };
         const entries = listData.results ?? [];
 
-        const details = await Promise.all(
-          entries.slice(0, 300).map(async (entry) => {
-            try {
-              const r = await fetch(`${SRD_BASE}/magic-items/${entry.index}`);
-              const d = (await r.json()) as {
-                name: string;
-                desc?: string[];
-                equipment_category?: { name: string };
-                rarity?: { name: string };
-              };
-              const tags: string[] = [
-                d.equipment_category?.name?.toLowerCase() ?? "magic",
-                d.rarity?.name?.toLowerCase() ?? "",
-              ].filter(Boolean);
-              return {
-                index: entry.index,
-                name: d.name,
-                description: (d.desc ?? []).join(" "),
-                tags,
-              } satisfies SrdItem;
-            } catch {
-              return {
-                index: entry.index,
-                name: entry.name,
-                description: "",
-                tags: ["magic"],
-              } satisfies SrdItem;
-            }
-          }),
-        );
-
         if (!cancelled) {
-          setItems(details);
+          // Store just the stub — no detail calls at all
+          setItems(
+            entries.map((e) => ({
+              index: e.index,
+              name: e.name,
+              description: "",
+              tags: ["magic"],
+            })),
+          );
           setStatus("ready");
         }
       } catch {
@@ -72,14 +50,38 @@ export function useSRD(): UseSRDResult {
     };
   }, []);
 
+  async function fetchItemDetail(index: string): Promise<SrdItem | null> {
+    try {
+      const r = await fetch(`${SRD_BASE}/magic-items/${index}`);
+      const d = (await r.json()) as {
+        name: string;
+        desc?: string[];
+        equipment_category?: { name: string };
+        rarity?: { name: string };
+      };
+      const tags: string[] = [
+        d.equipment_category?.name?.toLowerCase() ?? "magic",
+        d.rarity?.name?.toLowerCase() ?? "",
+      ].filter(Boolean);
+      return {
+        index,
+        name: d.name,
+        description: (d.desc ?? []).join(" "),
+        tags,
+      };
+    } catch {
+      return null;
+    }
+  }
+
   const statusText =
     status === "loading"
-      ? "Loading SRD…"
+      ? "Loading SRD item list…"
       : status === "ready"
-        ? `${items.length} SRD items loaded`
+        ? `${items.length} SRD items available`
         : status === "error"
           ? "SRD unavailable (offline)"
           : "";
 
-  return { items, status, statusText };
+  return { items, status, statusText, fetchItemDetail };
 }
