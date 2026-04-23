@@ -14,12 +14,14 @@ import {
   FormControl,
   InputLabel,
   Grid,
+  colors,
 } from "@mui/material";
 import { Button } from "./ui/Button";
 import { Badge } from "./ui/Badge";
 import { SortButton } from "./ui/SortButton";
 import { ItemModal } from "./modals/ItemModal";
 import type { CampaignState, Item, SortState, SrdItem } from "../types";
+// import { BorderColor } from "@mui/icons-material";
 
 interface Props {
   state: CampaignState;
@@ -48,6 +50,46 @@ export function LootTracker({
   const [filterLocation, setLoc] = useState("");
   const [filterNotable, setNotable] = useState("");
   const [modal, setModal] = useState<"add" | Item | null>(null);
+
+  const selectMenuProps = {
+    PaperProps: {
+      sx: {
+        backgroundColor: "var(--bg-primary)",
+        color: "var(--text-primary)",
+        "& .MuiMenuItem-root": {
+          fontSize: 12,
+          color: "var(--text-secondary)",
+          "&:hover": {
+            backgroundColor: "var(--bg-secondary)",
+          },
+          "&.Mui-selected": {
+            backgroundColor: "var(--bg-secondary)",
+            color: "var(--text-secondary)",
+            "&:hover": {
+              backgroundColor: "var(--bg-secondary)",
+            },
+          },
+        },
+      },
+    },
+  };
+
+  const selectSx = {
+    fontSize: 12,
+    color: "var(--text-secondary)",
+    "& .MuiSelect-select": {
+      color: "var(--text-secondary)",
+    },
+    "& .MuiOutlinedInput-notchedOutline": {
+      borderColor: "var(--border)",
+    },
+    "&:hover .MuiOutlinedInput-notchedOutline": {
+      borderColor: "var(--border-md)",
+    },
+    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+      borderColor: "var(--accent)",
+    },
+  };
 
   function toggleSort(col: string) {
     setSort((prev) =>
@@ -120,23 +162,45 @@ export function LootTracker({
             onChange={(e) => setSearch(e.target.value)}
             size="small"
             fullWidth
-            inputProps={{ style: { fontSize: 12 } }}
+            inputProps={{
+              style: { fontSize: 12, color: "var(--text-primary)" },
+            }}
+            sx={{
+              "& .MuiOutlinedInput-root": {
+                "& fieldset": {
+                  borderColor: "var(--border)",
+                },
+                "&:hover fieldset": {
+                  borderColor: "var(--border-md)",
+                },
+                "&.Mui-focused fieldset": {
+                  borderColor: "var(--accent)",
+                },
+              },
+            }}
           />
         </Grid>
         <Grid item xs={6} sm={4} md={3}>
           <FormControl fullWidth size="small">
-            <InputLabel sx={{ fontSize: 12 }}>All carriers</InputLabel>
+            <InputLabel sx={{ fontSize: 12, color: "var(--text-secondary)" }}>
+              All carriers
+            </InputLabel>
             <Select
               value={filterCarrier}
               label="All carriers"
               onChange={(e) => setCarrier(e.target.value)}
-              sx={{ fontSize: 12 }}
+              MenuProps={selectMenuProps}
+              sx={selectSx}
             >
-              <MenuItem value="">
+              <MenuItem value="" sx={{ color: "var(--text-secondary)" }}>
                 <em>All carriers</em>
               </MenuItem>
               {state.characters.map((c) => (
-                <MenuItem key={c} value={c} sx={{ fontSize: 12 }}>
+                <MenuItem
+                  key={c}
+                  value={c}
+                  sx={{ fontSize: 12, color: "var(--text-secondary)" }}
+                >
                   {c}
                 </MenuItem>
               ))}
@@ -145,18 +209,25 @@ export function LootTracker({
         </Grid>
         <Grid item xs={6} sm={4} md={3}>
           <FormControl fullWidth size="small">
-            <InputLabel sx={{ fontSize: 12 }}>All locations</InputLabel>
+            <InputLabel sx={{ fontSize: 12, color: "var(--text-secondary)" }}>
+              All locations
+            </InputLabel>
             <Select
               value={filterLocation}
               label="All locations"
               onChange={(e) => setLoc(e.target.value)}
-              sx={{ fontSize: 12 }}
+              MenuProps={selectMenuProps}
+              sx={selectSx}
             >
-              <MenuItem value="">
+              <MenuItem value="" sx={{ color: "var(--text-secondary)" }}>
                 <em>All locations</em>
               </MenuItem>
               {state.locations.map((l) => (
-                <MenuItem key={l} value={l} sx={{ fontSize: 12 }}>
+                <MenuItem
+                  key={l}
+                  value={l}
+                  sx={{ fontSize: 12, color: "var(--text-secondary)" }}
+                >
                   {l}
                 </MenuItem>
               ))}
@@ -165,20 +236,29 @@ export function LootTracker({
         </Grid>
         <Grid item xs={6} sm={4} md={3}>
           <FormControl fullWidth size="small">
-            <InputLabel sx={{ fontSize: 12 }}>All items</InputLabel>
+            <InputLabel sx={{ fontSize: 12, color: "var(--text-secondary)" }}>
+              All items
+            </InputLabel>
             <Select
               value={filterNotable}
               label="All items"
               onChange={(e) => setNotable(e.target.value)}
-              sx={{ fontSize: 12 }}
+              MenuProps={selectMenuProps}
+              sx={selectSx}
             >
-              <MenuItem value="">
+              <MenuItem value="" sx={{ color: "var(--text-secondary)" }}>
                 <em>All items</em>
               </MenuItem>
-              <MenuItem value="notable" sx={{ fontSize: 12 }}>
+              <MenuItem
+                value="notable"
+                sx={{ fontSize: 12, color: "var(--text-secondary)" }}
+              >
                 Notable only
               </MenuItem>
-              <MenuItem value="normal" sx={{ fontSize: 12 }}>
+              <MenuItem
+                value="normal"
+                sx={{ fontSize: 12, color: "var(--text-secondary)" }}
+              >
                 Normal only
               </MenuItem>
             </Select>
@@ -194,8 +274,9 @@ export function LootTracker({
                 sx={{
                   fontSize: 11,
                   fontWeight: 500,
-                  color: "text.secondary",
+                  color: "var(--text-secondary)",
                   width: "36%",
+                  minWidth: 200,
                 }}
               >
                 <SortButton col="name" sort={sort} onSort={toggleSort}>
@@ -206,12 +287,12 @@ export function LootTracker({
                 sx={{
                   fontSize: 11,
                   fontWeight: 500,
-                  color: "text.secondary",
+                  color: "var(--text-secondary)",
                   width: "18%",
                 }}
               >
                 <SortButton col="holder" sort={sort} onSort={toggleSort}>
-                  Held by / stored at
+                  Held By/At
                 </SortButton>
               </TableCell>
               <TableCell
@@ -219,7 +300,7 @@ export function LootTracker({
                 sx={{
                   fontSize: 11,
                   fontWeight: 500,
-                  color: "text.secondary",
+                  color: "var(--text-secondary)",
                   width: "8%",
                 }}
               >
@@ -228,7 +309,11 @@ export function LootTracker({
                 </SortButton>
               </TableCell>
               <TableCell
-                sx={{ fontSize: 11, fontWeight: 500, color: "text.secondary" }}
+                sx={{
+                  fontSize: 11,
+                  fontWeight: 500,
+                  color: "var(--text-secondary)",
+                }}
               >
                 Tags
               </TableCell>
@@ -241,7 +326,7 @@ export function LootTracker({
                 <TableCell
                   colSpan={5}
                   align="center"
-                  sx={{ color: "text.secondary", py: 3.5 }}
+                  sx={{ color: "var(--text-secondary)", py: 3.5 }}
                 >
                   No items found
                 </TableCell>
@@ -259,12 +344,16 @@ export function LootTracker({
                     >
                       {item.notable && <Badge variant="notable">notable</Badge>}
                       {item.srd && <Badge variant="srd">SRD</Badge>}
-                      <Typography fontWeight={500} fontSize={13}>
+                      <Typography
+                        fontWeight={500}
+                        fontSize={13}
+                        color="var(--text-primary)"
+                      >
                         {item.name}
                       </Typography>
                     </Stack>
                     {item.description && (
-                      <Typography fontSize={11} color="text.secondary">
+                      <Typography fontSize={11} color="var(--text-secondary)">
                         {item.description.slice(0, 120)}
                         {item.description.length > 120 ? "…" : ""}
                       </Typography>

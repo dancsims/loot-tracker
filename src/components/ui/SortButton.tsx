@@ -15,7 +15,22 @@ export function SortButton({ col, sort, onSort, children }: SortButtonProps) {
       active={active}
       direction={active ? sort.dir : "asc"}
       onClick={() => onSort(col)}
-      sx={{ fontSize: 11, color: "text.secondary", "& .MuiTableSortLabel-icon": { fontSize: 14 } }}
+      hideSortIcon={!active}
+      sx={{
+        fontSize: 11,
+        color: "var(--text-secondary) !important",
+        "& .MuiTableSortLabel-icon": {
+          fontSize: 14,
+          color: "var(--text-secondary) !important",
+          opacity: 1,
+        },
+        "&.Mui-active": {
+          color: "var(--text-secondary) !important",
+        },
+        "&.Mui-active .MuiTableSortLabel-icon": {
+          color: "var(--text-secondary) !important",
+        },
+      }}
     >
       {children}
     </TableSortLabel>

@@ -39,11 +39,15 @@ export function Dashboard({ state }: Props) {
             <Grid item xs={6} sm={4} md={2} key={c.id}>
               <Paper
                 variant="outlined"
-                sx={{ p: 1.25, borderRadius: 2, backgroundColor: "bg-primary" }}
+                sx={{
+                  p: 1.25,
+                  borderRadius: 2,
+                  backgroundColor: "var(--bg-tertiary)",
+                }}
               >
                 <Typography
                   variant="caption"
-                  color="text.secondary"
+                  color="var(--text-secondary)"
                   display="block"
                   fontSize={10}
                 >
@@ -51,7 +55,12 @@ export function Dashboard({ state }: Props) {
                 </Typography>
                 <Typography
                   variant="h6"
-                  sx={{ fontSize: 20, fontWeight: 500, ...(v < 0 ? neg : {}) }}
+                  sx={{
+                    fontSize: 20,
+                    fontWeight: 500,
+                    color: "var(--text-primary)",
+                    ...(v < 0 ? neg : {}),
+                  }}
                 >
                   {v.toLocaleString()}{" "}
                 </Typography>
@@ -65,12 +74,12 @@ export function Dashboard({ state }: Props) {
             sx={{
               p: 1.25,
               borderRadius: 2,
-              borderColor: "bg-primary",
+              backgroundColor: "var(--bg-tertiary)",
             }}
           >
             <Typography
               variant="caption"
-              color="text.secondary"
+              color="var(--text-secondary)"
               display="block"
               fontSize={10}
             >
@@ -81,6 +90,7 @@ export function Dashboard({ state }: Props) {
               sx={{
                 fontSize: 20,
                 fontWeight: 500,
+                color: "var(--text-primary)",
                 ...(grandGP < 0 ? neg : {}),
               }}
             >
@@ -96,7 +106,7 @@ export function Dashboard({ state }: Props) {
           item
           xs={12}
           md={6}
-          sx={{ backgroundColor: "bg-primary", p: 2, borderRadius: 2 }}
+          sx={{ backgroundColor: "var(--bg-primary)", p: 2, borderRadius: 2 }}
         >
           <Stack
             direction="row"
@@ -104,10 +114,14 @@ export function Dashboard({ state }: Props) {
             alignItems="center"
             mb={1}
           >
-            <Typography fontWeight={500} fontSize={14}>
+            <Typography
+              fontWeight={500}
+              fontSize={14}
+              color="var(--text-primary)"
+            >
               Notable loot
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" color="var(--text-secondary)">
               {notable.length} item{notable.length !== 1 ? "s" : ""}
             </Typography>
           </Stack>
@@ -118,7 +132,7 @@ export function Dashboard({ state }: Props) {
                   sx={{
                     fontSize: 11,
                     fontWeight: 500,
-                    color: "text.secondary",
+                    color: "var(--text-secondary)",
                   }}
                 >
                   Item
@@ -127,7 +141,7 @@ export function Dashboard({ state }: Props) {
                   sx={{
                     fontSize: 11,
                     fontWeight: 500,
-                    color: "text.secondary",
+                    color: "var(--text-secondary)",
                   }}
                 >
                   Held by / stored at
@@ -140,7 +154,7 @@ export function Dashboard({ state }: Props) {
                   <TableCell
                     colSpan={2}
                     align="center"
-                    sx={{ color: "text.secondary", py: 3.5 }}
+                    sx={{ color: "var(--text-secondary)", py: 3.5 }}
                   >
                     No notable items yet
                   </TableCell>
@@ -149,7 +163,11 @@ export function Dashboard({ state }: Props) {
                 notable.map((i) => (
                   <TableRow key={i.id}>
                     <TableCell>
-                      <Typography fontWeight={500} fontSize={13}>
+                      <Typography
+                        fontWeight={500}
+                        fontSize={13}
+                        color="var(--text-primary)"
+                      >
                         {i.name}
                       </Typography>
                       {i.qty > 1 && (
@@ -177,7 +195,12 @@ export function Dashboard({ state }: Props) {
 
         {/* Recent transactions */}
         <Grid item xs={12} md={6}>
-          <Typography fontWeight={500} fontSize={14} mb={1}>
+          <Typography
+            fontWeight={500}
+            fontSize={14}
+            mb={1}
+            color="var(--text-primary)"
+          >
             Recent transactions
           </Typography>
           <Table size="small">
@@ -187,7 +210,7 @@ export function Dashboard({ state }: Props) {
                   sx={{
                     fontSize: 11,
                     fontWeight: 500,
-                    color: "text.secondary",
+                    color: "var(--text-secondary)",
                   }}
                 >
                   Date
@@ -196,7 +219,7 @@ export function Dashboard({ state }: Props) {
                   sx={{
                     fontSize: 11,
                     fontWeight: 500,
-                    color: "text.secondary",
+                    color: "var(--text-secondary)",
                   }}
                 >
                   Description
@@ -206,7 +229,7 @@ export function Dashboard({ state }: Props) {
                   sx={{
                     fontSize: 11,
                     fontWeight: 500,
-                    color: "text.secondary",
+                    color: "var(--text-secondary)",
                   }}
                 >
                   Amount
@@ -219,7 +242,7 @@ export function Dashboard({ state }: Props) {
                   <TableCell
                     colSpan={3}
                     align="center"
-                    sx={{ color: "text.secondary", py: 3.5 }}
+                    sx={{ color: "var(--text-secondary)", py: 3.5 }}
                   >
                     No transactions yet
                   </TableCell>
@@ -241,7 +264,7 @@ export function Dashboard({ state }: Props) {
                     <TableRow key={tx.id}>
                       <TableCell
                         sx={{
-                          color: "text.secondary",
+                          color: "var(--text-secondary)",
                           whiteSpace: "nowrap",
                           width: 90,
                           fontSize: 13,
@@ -249,7 +272,9 @@ export function Dashboard({ state }: Props) {
                       >
                         {tx.date}
                       </TableCell>
-                      <TableCell sx={{ fontSize: 13 }}>
+                      <TableCell
+                        sx={{ fontSize: 13, color: "var(--text-primary)" }}
+                      >
                         {tx.description}
                       </TableCell>
                       <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
