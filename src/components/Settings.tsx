@@ -99,8 +99,9 @@ export function Settings({ state, onUpdate, onReset }: Props) {
     style: { fontSize: 13, color: "var(--text-secondary)" },
   };
   const sxSmall = {
-    "& .MuiInputBase-input": { py: "7px", fontSize: 13 },
+    "& .MuiInputBase-input": { fontSize: 13 },
     "& .MuiOutlinedInput-root": {
+      height: 36,
       "& fieldset": {
         borderColor: "var(--border)",
       },
@@ -175,7 +176,9 @@ export function Settings({ state, onUpdate, onReset }: Props) {
             inputProps={{ ...inputProps, step: "0.01" }}
             sx={{ width: 90, ...sxSmall }}
           />
-          <Button onClick={addCurrency}>Add</Button>
+          <Button onClick={addCurrency} sx={{ height: 36 }}>
+            Add
+          </Button>
         </Stack>
       </Box>
 
@@ -205,7 +208,9 @@ export function Settings({ state, onUpdate, onReset }: Props) {
             sx={{ minWidth: 160, ...sxSmall }}
             inputProps={inputProps}
           />
-          <Button onClick={addChar}>Add</Button>
+          <Button onClick={addChar} sx={{ height: 36 }}>
+            Add
+          </Button>
         </Stack>
       </Box>
 
@@ -235,7 +240,9 @@ export function Settings({ state, onUpdate, onReset }: Props) {
             sx={{ minWidth: 160, ...sxSmall }}
             inputProps={inputProps}
           />
-          <Button onClick={addLoc}>Add</Button>
+          <Button onClick={addLoc} sx={{ height: 36 }}>
+            Add
+          </Button>
         </Stack>
       </Box>
 
