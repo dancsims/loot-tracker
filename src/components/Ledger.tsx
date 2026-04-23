@@ -205,11 +205,7 @@ export function Ledger({ state, onAdd, onUpdate, onDelete }: Props) {
                       spacing={0.5}
                       justifyContent="flex-end"
                     >
-                      <Button
-                        size="sm"
-                        className="btn white"
-                        onClick={() => setModal(tx)}
-                      >
+                      <Button size="sm" onClick={() => setModal(tx)}>
                         Edit
                       </Button>
                       <Button

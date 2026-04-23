@@ -364,7 +364,7 @@ export function LootTracker({
                     ) : item.location ? (
                       <Badge variant="location">{item.location}</Badge>
                     ) : (
-                      <Typography color="text.secondary">—</Typography>
+                      <Typography color="var(--text-secondary)">—</Typography>
                     )}
                   </TableCell>
                   <TableCell align="center">
@@ -379,6 +379,18 @@ export function LootTracker({
                           width: 44,
                           fontSize: 12,
                           padding: "3px 4px",
+                          color: "var(--text-secondary)",
+                        },
+                      }}
+                      sx={{
+                        "& .MuiOutlinedInput-root": {
+                          "& fieldset": { borderColor: "var(--border)" },
+                          "&:hover fieldset": {
+                            borderColor: "var(--border-md)",
+                          },
+                          "&.Mui-focused fieldset": {
+                            borderColor: "var(--accent)",
+                          },
                         },
                       }}
                       onChange={(e) =>

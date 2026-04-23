@@ -7,18 +7,51 @@ import {
 type Variant = "default" | "primary" | "danger";
 type Size = "sm" | "md";
 
-interface ButtonProps extends Omit<MuiButtonProps, "variant" | "size" | "color"> {
+interface ButtonProps extends Omit<
+  MuiButtonProps,
+  "variant" | "size" | "color"
+> {
   variant?: Variant;
   size?: Size;
 }
 
-export function Button({ variant = "default", size = "md", children, ...rest }: ButtonProps) {
+export function Button({
+  variant = "default",
+  size = "md",
+  children,
+  sx,
+  ...rest
+}: ButtonProps) {
   const muiVariant = variant === "primary" ? "contained" : "outlined";
-  const muiColor = variant === "danger" ? "error" : variant === "primary" ? "primary" : "inherit";
+  const muiColor =
+    variant === "danger"
+      ? "error"
+      : variant === "primary"
+        ? "primary"
+        : "inherit";
   const muiSize = size === "sm" ? "small" : "medium";
 
+  const defaultSx =
+    variant === "default"
+      ? {
+          color: "var(--text-primary)",
+          borderColor: "var(--border)",
+          backgroundColor: "var(--bg-secondary)",
+          "&:hover": {
+            borderColor: "var(--border-md)",
+            backgroundColor: "var(--bg-tertiary)",
+          },
+        }
+      : {};
+
   return (
-    <MuiButton variant={muiVariant} color={muiColor} size={muiSize} {...rest}>
+    <MuiButton
+      variant={muiVariant}
+      color={muiColor}
+      size={muiSize}
+      sx={{ ...defaultSx, ...sx }}
+      {...rest}
+    >
       {children}
     </MuiButton>
   );
