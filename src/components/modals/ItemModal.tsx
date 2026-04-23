@@ -27,7 +27,43 @@ interface Props {
   onClose: () => void;
 }
 
-const inputSx = { "& .MuiInputBase-input": { fontSize: 13 } };
+const inputSx = {
+  "& .MuiInputBase-input": { fontSize: 13, color: "var(--text-primary)" },
+  "& .MuiOutlinedInput-root": {
+    "& fieldset": { borderColor: "var(--border)" },
+    "&:hover fieldset": { borderColor: "var(--border-md)" },
+    "&.Mui-focused fieldset": { borderColor: "var(--accent)" },
+  },
+};
+
+const selectSx = {
+  fontSize: 13,
+  color: "var(--text-primary)",
+  "& .MuiOutlinedInput-notchedOutline": { borderColor: "var(--border)" },
+  "&:hover .MuiOutlinedInput-notchedOutline": {
+    borderColor: "var(--border-md)",
+  },
+  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+    borderColor: "var(--accent)",
+  },
+};
+
+const selectMenuProps = {
+  PaperProps: {
+    sx: {
+      backgroundColor: "var(--bg-primary)",
+      "& .MuiMenuItem-root": {
+        fontSize: 13,
+        color: "var(--text-secondary)",
+        "&:hover": { backgroundColor: "var(--bg-secondary)" },
+        "&.Mui-selected": {
+          backgroundColor: "var(--bg-secondary)",
+          "&:hover": { backgroundColor: "var(--bg-secondary)" },
+        },
+      },
+    },
+  },
+};
 
 export function ItemModal({
   item,
@@ -145,6 +181,7 @@ export function ItemModal({
             placeholder="Item name"
             autoComplete="off"
             disabled={fetching}
+            sx={inputSx}
           />
           {showDrop && (
             <Paper
@@ -159,6 +196,8 @@ export function ItemModal({
                 overflowY: "auto",
                 mt: 0.25,
                 borderRadius: 1,
+                backgroundColor: "var(--bg-primary)",
+                border: "1px solid var(--border)",
               }}
             >
               {matches.map((m) => (
@@ -169,8 +208,9 @@ export function ItemModal({
                     px: 1.25,
                     py: 0.875,
                     fontSize: 13,
+                    color: "var(--text-primary)",
                     cursor: "pointer",
-                    "&:hover": { bgcolor: "action.hover" },
+                    "&:hover": { backgroundColor: "var(--bg-secondary)" },
                   }}
                 >
                   {m.name}
@@ -191,6 +231,7 @@ export function ItemModal({
           onChange={(e) => setDesc(e.target.value)}
           style={{ width: "100%" }}
           disabled={fetching}
+          sx={inputSx}
         />
       </Field>
 
@@ -203,7 +244,6 @@ export function ItemModal({
               type="number"
               value={qty}
               onChange={(e) => setQty(parseInt(e.target.value) || 1)}
-              // inputProps={{ min: 1, style: { fontSize: 13 } }}
               sx={inputSx}
             />
           </Field>
@@ -215,7 +255,8 @@ export function ItemModal({
                 value={carrier}
                 onChange={(e) => setCarrier(e.target.value)}
                 displayEmpty
-                sx={{ fontSize: 13 }}
+                sx={selectSx}
+                MenuProps={selectMenuProps}
               >
                 <MenuItem value="">
                   <em>— none —</em>
@@ -239,7 +280,8 @@ export function ItemModal({
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 displayEmpty
-                sx={{ fontSize: 13 }}
+                sx={selectSx}
+                MenuProps={selectMenuProps}
               >
                 <MenuItem value="">
                   <em>— none —</em>
@@ -276,7 +318,11 @@ export function ItemModal({
             size="small"
           />
         }
-        label={<Typography sx={{ fontSize: 13 }}>Mark as notable item</Typography>}
+        label={
+          <Typography sx={{ fontSize: 13, color: "var(--text-primary)" }}>
+            Mark as notable item
+          </Typography>
+        }
       />
     </Modal>
   );

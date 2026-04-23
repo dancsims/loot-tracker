@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Stack,
@@ -14,6 +14,9 @@ import {
   FormControl,
   InputLabel,
   Grid,
+  useMediaQuery,
+  useTheme,
+  Paper,
 } from "@mui/material";
 import { Button } from "./ui/Button";
 import { Badge } from "./ui/Badge";
@@ -49,6 +52,15 @@ export function LootTracker({
   const [filterLocation, setLoc] = useState("");
   const [filterNotable, setNotable] = useState("");
   const [modal, setModal] = useState<"add" | Item | null>(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const [page, setPage] = useState(0);
+  const rowsPerPage = 10;
+
+  useEffect(
+    () => setPage(0),
+    [sort, search, filterCarrier, filterLocation, filterNotable],
+  );
 
   const selectMenuProps = {
     PaperProps: {
@@ -129,6 +141,40 @@ export function LootTracker({
       if (av > bv) return sort.dir === "asc" ? 1 : -1;
       return 0;
     });
+
+  const paginated = filtered.slice(
+    page * rowsPerPage,
+    (page + 1) * rowsPerPage,
+  );
+  const pageCount = Math.ceil(filtered.length / rowsPerPage);
+
+  const paginationControls = pageCount > 1 && (
+    <Stack
+      direction="row"
+      justifyContent="center"
+      alignItems="center"
+      spacing={1}
+      mt={1.5}
+    >
+      <Button
+        size="sm"
+        onClick={() => setPage((p) => p - 1)}
+        disabled={page === 0}
+      >
+        ‹ Prev
+      </Button>
+      <Typography fontSize={12} color="var(--text-secondary)">
+        {page + 1} / {pageCount}
+      </Typography>
+      <Button
+        size="sm"
+        onClick={() => setPage((p) => p + 1)}
+        disabled={page === pageCount - 1}
+      >
+        Next ›
+      </Button>
+    </Stack>
+  );
 
   function handleSave(item: Item) {
     if (modal === "add") onAdd(item);
@@ -265,75 +311,33 @@ export function LootTracker({
         </Grid>
       </Grid>
 
-      <Box sx={{ overflowX: "auto" }}>
-        <Table size="small" sx={{ minWidth: 600 }}>
-          <TableHead>
-            <TableRow>
-              <TableCell
+      {isMobile ? (
+        <Stack spacing={1}>
+          {filtered.length === 0 ? (
+            <Typography
+              color="var(--text-secondary)"
+              textAlign="center"
+              py={3.5}
+            >
+              No items found
+            </Typography>
+          ) : (
+            filtered.map((item) => (
+              <Paper
+                key={item.id}
+                variant="outlined"
                 sx={{
-                  fontSize: 11,
-                  fontWeight: 500,
-                  color: "var(--text-secondary)",
-                  width: "36%",
-                  minWidth: 200,
+                  p: 1.5,
+                  borderRadius: 2,
+                  backgroundColor: "var(--bg-secondary)",
                 }}
               >
-                <SortButton col="name" sort={sort} onSort={toggleSort}>
-                  Name
-                </SortButton>
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontSize: 11,
-                  fontWeight: 500,
-                  color: "var(--text-secondary)",
-                  width: "18%",
-                }}
-              >
-                <SortButton col="holder" sort={sort} onSort={toggleSort}>
-                  Held By/At
-                </SortButton>
-              </TableCell>
-              <TableCell
-                align="center"
-                sx={{
-                  fontSize: 11,
-                  fontWeight: 500,
-                  color: "var(--text-secondary)",
-                  width: "8%",
-                }}
-              >
-                <SortButton col="qty" sort={sort} onSort={toggleSort}>
-                  Qty
-                </SortButton>
-              </TableCell>
-              <TableCell
-                sx={{
-                  fontSize: 11,
-                  fontWeight: 500,
-                  color: "var(--text-secondary)",
-                }}
-              >
-                Tags
-              </TableCell>
-              <TableCell sx={{ width: "13%" }} />
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {filtered.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={5}
-                  align="center"
-                  sx={{ color: "var(--text-secondary)", py: 3.5 }}
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="flex-start"
                 >
-                  No items found
-                </TableCell>
-              </TableRow>
-            ) : (
-              filtered.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell>
+                  <Box flex={1}>
                     <Stack
                       direction="row"
                       spacing={0.5}
@@ -352,22 +356,34 @@ export function LootTracker({
                       </Typography>
                     </Stack>
                     {item.description && (
-                      <Typography fontSize={11} color="var(--text-secondary)">
+                      <Typography
+                        fontSize={11}
+                        color="var(--text-secondary)"
+                        mb={0.75}
+                      >
                         {item.description.slice(0, 120)}
                         {item.description.length > 120 ? "…" : ""}
                       </Typography>
                     )}
-                  </TableCell>
-                  <TableCell>
-                    {item.carrier ? (
-                      <Badge variant="character">{item.carrier}</Badge>
-                    ) : item.location ? (
-                      <Badge variant="location">{item.location}</Badge>
-                    ) : (
-                      <Typography color="var(--text-secondary)">—</Typography>
-                    )}
-                  </TableCell>
-                  <TableCell align="center">
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      alignItems="center"
+                      flexWrap="wrap"
+                    >
+                      {item.carrier ? (
+                        <Badge variant="character">{item.carrier}</Badge>
+                      ) : item.location ? (
+                        <Badge variant="location">{item.location}</Badge>
+                      ) : null}
+                      {item.tags.map((t) => (
+                        <Badge key={t} variant="neutral">
+                          {t}
+                        </Badge>
+                      ))}
+                    </Stack>
+                  </Box>
+                  <Stack alignItems="flex-end" spacing={0.75} ml={1}>
                     <TextField
                       type="number"
                       size="small"
@@ -397,22 +413,7 @@ export function LootTracker({
                         onQtyChange(item.id, parseInt(e.target.value) || 1)
                       }
                     />
-                  </TableCell>
-                  <TableCell>
-                    <Stack direction="row" spacing={0.5} flexWrap="wrap">
-                      {item.tags.map((t) => (
-                        <Badge key={t} variant="neutral">
-                          {t}
-                        </Badge>
-                      ))}
-                    </Stack>
-                  </TableCell>
-                  <TableCell align="right">
-                    <Stack
-                      direction="row"
-                      spacing={0.5}
-                      justifyContent="flex-end"
-                    >
+                    <Stack direction="row" spacing={0.5}>
                       <Button size="sm" onClick={() => setModal(item)}>
                         Edit
                       </Button>
@@ -426,13 +427,201 @@ export function LootTracker({
                         Del
                       </Button>
                     </Stack>
+                  </Stack>
+                </Stack>
+              </Paper>
+            ))
+          )}
+        </Stack>
+      ) : (
+        <>
+          <Box sx={{ overflowX: "auto" }}>
+            <Table size="small" sx={{ minWidth: 600 }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell
+                    sx={{
+                      fontSize: 11,
+                      fontWeight: 500,
+                      color: "var(--text-secondary)",
+                      width: "36%",
+                      minWidth: 200,
+                    }}
+                  >
+                    <SortButton col="name" sort={sort} onSort={toggleSort}>
+                      Name
+                    </SortButton>
                   </TableCell>
+                  <TableCell
+                    sx={{
+                      fontSize: 11,
+                      fontWeight: 500,
+                      color: "var(--text-secondary)",
+                      width: "18%",
+                    }}
+                  >
+                    <SortButton col="holder" sort={sort} onSort={toggleSort}>
+                      Held By/At
+                    </SortButton>
+                  </TableCell>
+                  <TableCell
+                    align="center"
+                    sx={{
+                      fontSize: 11,
+                      fontWeight: 500,
+                      color: "var(--text-secondary)",
+                      width: "8%",
+                    }}
+                  >
+                    <SortButton col="qty" sort={sort} onSort={toggleSort}>
+                      Qty
+                    </SortButton>
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      fontSize: 11,
+                      fontWeight: 500,
+                      color: "var(--text-secondary)",
+                    }}
+                  >
+                    Tags
+                  </TableCell>
+                  <TableCell sx={{ width: "13%" }} />
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </Box>
+              </TableHead>
+              <TableBody>
+                {filtered.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5}
+                      align="center"
+                      sx={{ color: "var(--text-secondary)", py: 3.5 }}
+                    >
+                      No items found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  paginated.map((item) => (
+                    <TableRow key={item.id} sx={{ height: 49 }}>
+                      <TableCell sx={{ verticalAlign: "top" }}>
+                        <Stack
+                          direction="row"
+                          spacing={0.5}
+                          flexWrap="wrap"
+                          alignItems="center"
+                          mb={0.25}
+                        >
+                          {item.notable && (
+                            <Badge variant="notable">notable</Badge>
+                          )}
+                          {item.srd && <Badge variant="srd">SRD</Badge>}
+                          <Typography
+                            fontWeight={500}
+                            fontSize={13}
+                            color="var(--text-primary)"
+                          >
+                            {item.name}
+                          </Typography>
+                        </Stack>
+                        {item.description && (
+                          <Typography
+                            fontSize={11}
+                            color="var(--text-secondary)"
+                          >
+                            {item.description.slice(0, 120)}
+                            {item.description.length > 120 ? "…" : ""}
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell sx={{ verticalAlign: "top" }}>
+                        {item.carrier ? (
+                          <Badge variant="character">{item.carrier}</Badge>
+                        ) : item.location ? (
+                          <Badge variant="location">{item.location}</Badge>
+                        ) : (
+                          <Typography color="var(--text-secondary)">
+                            —
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell align="center" sx={{ verticalAlign: "top" }}>
+                        <TextField
+                          type="number"
+                          size="small"
+                          value={item.qty}
+                          inputProps={{
+                            min: 1,
+                            style: {
+                              textAlign: "center",
+                              width: 44,
+                              fontSize: 12,
+                              padding: "3px 4px",
+                              color: "var(--text-secondary)",
+                            },
+                          }}
+                          sx={{
+                            "& .MuiOutlinedInput-root": {
+                              "& fieldset": { borderColor: "var(--border)" },
+                              "&:hover fieldset": {
+                                borderColor: "var(--border-md)",
+                              },
+                              "&.Mui-focused fieldset": {
+                                borderColor: "var(--accent)",
+                              },
+                            },
+                          }}
+                          onChange={(e) =>
+                            onQtyChange(item.id, parseInt(e.target.value) || 1)
+                          }
+                        />
+                      </TableCell>
+                      <TableCell sx={{ verticalAlign: "top" }}>
+                        <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                          {item.tags.map((t) => (
+                            <Badge key={t} variant="neutral">
+                              {t}
+                            </Badge>
+                          ))}
+                        </Stack>
+                      </TableCell>
+                      <TableCell align="right" sx={{ verticalAlign: "top" }}>
+                        <Stack
+                          direction="row"
+                          spacing={0.5}
+                          justifyContent="flex-end"
+                        >
+                          <Button size="sm" onClick={() => setModal(item)}>
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="danger"
+                            onClick={() => {
+                              if (confirm("Delete this item?"))
+                                onDelete(item.id);
+                            }}
+                          >
+                            Del
+                          </Button>
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+                {pageCount > 1 &&
+                  Array.from({ length: rowsPerPage - paginated.length }).map(
+                    (_, i) => (
+                      <TableRow key={`empty-${i}`} sx={{ height: 49 }}>
+                        <TableCell colSpan={5} />
+                      </TableRow>
+                    ),
+                  )}
+              </TableBody>
+            </Table>
+          </Box>
+          {paginationControls}
+        </>
+      )}
 
       {modal !== null && (
         <ItemModal
