@@ -316,6 +316,10 @@ export function ItemModal({
             checked={notable}
             onChange={(e) => setNotable(e.target.checked)}
             size="small"
+            sx={{
+              color: "var(--text-secondary)",
+              "&.Mui-checked": { color: "var(--accent)" },
+            }}
           />
         }
         label={
