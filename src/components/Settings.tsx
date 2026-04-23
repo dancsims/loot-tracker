@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Box, Stack, Typography, TextField, Paper } from "@mui/material";
 import { Button } from "./ui/Button";
 import { uid } from "../utils/data";
 import type { CampaignState, Currency } from "../types";
@@ -7,6 +8,52 @@ interface Props {
   state: CampaignState;
   onUpdate: (patch: Partial<CampaignState>) => void;
   onReset: () => void;
+}
+
+function SectionHeader({ children }: { children: React.ReactNode }) {
+  return (
+    <Typography
+      variant="overline"
+      color="var(--text-secondary)"
+      fontSize={11}
+      letterSpacing="0.04em"
+      display="block"
+      mb={1}
+    >
+      {children}
+    </Typography>
+  );
+}
+
+function ListItem({
+  label,
+  onRemove,
+}: {
+  label: string;
+  onRemove: () => void;
+}) {
+  return (
+    <Paper
+      variant="outlined"
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        px: 1.25,
+        py: 0.75,
+        mb: 0.625,
+        borderRadius: 2,
+        backgroundColor: "var(--bg-tertiary)",
+      }}
+    >
+      <Typography fontSize={13} color="var(--text-primary)">
+        {label}
+      </Typography>
+      <Button size="sm" variant="danger" onClick={onRemove}>
+        Remove
+      </Button>
+    </Paper>
+  );
 }
 
 export function Settings({ state, onUpdate, onReset }: Props) {
@@ -34,21 +81,11 @@ export function Settings({ state, onUpdate, onReset }: Props) {
     setNewCurrRate("");
   }
 
-  function deleteCurrency(id: string) {
-    onUpdate({ currencies: state.currencies.filter((c) => c.id !== id) });
-  }
-
   function addChar() {
     const v = newChar.trim();
     if (!v) return;
     onUpdate({ characters: [...state.characters, v] });
     setNewChar("");
-  }
-
-  function deleteChar(i: number) {
-    const next = [...state.characters];
-    next.splice(i, 1);
-    onUpdate({ characters: next });
   }
 
   function addLoc() {
@@ -58,123 +95,153 @@ export function Settings({ state, onUpdate, onReset }: Props) {
     setNewLoc("");
   }
 
-  function deleteLoc(i: number) {
-    const next = [...state.locations];
-    next.splice(i, 1);
-    onUpdate({ locations: next });
-  }
+  const inputProps = {
+    style: { fontSize: 13, color: "var(--text-secondary)" },
+  };
+  const sxSmall = {
+    "& .MuiInputBase-input": { py: "7px", fontSize: 13 },
+    "& .MuiOutlinedInput-root": {
+      "& fieldset": {
+        borderColor: "var(--border)",
+      },
+      "&:hover fieldset": {
+        borderColor: "var(--border-md)",
+      },
+      "&.Mui-focused fieldset": {
+        borderColor: "var(--accent)",
+      },
+    },
+    "& label, & .MuiInputLabel-root": {
+      color: "var(--text-secondary)",
+    },
+  };
 
   return (
-    <div style={{ minWidth: 700, maxWidth: 900, margin: "0 auto" }}>
-      {/* Campaign name */}
-      <div className="settings-section">
-        <h3>Campaign</h3>
-        <div className="field">
-          <label>Campaign name</label>
-          <input
-            value={state.campaign}
-            style={{ minWidth: 220, maxWidth: 320 }}
-            onChange={(e) => onUpdate({ campaign: e.target.value })}
-          />
-        </div>
-      </div>
+    <Box>
+      {/* Campaign */}
+      <Box mb={3}>
+        <SectionHeader>Campaign</SectionHeader>
+        <TextField
+          label="Campaign name"
+          value={state.campaign}
+          onChange={(e) => onUpdate({ campaign: e.target.value })}
+          size="small"
+          sx={{
+            minWidth: 220,
+            maxWidth: 320,
+            ...sxSmall,
+          }}
+          inputProps={inputProps}
+        />
+      </Box>
 
       {/* Currencies */}
-      <div className="settings-section">
-        <h3>Currencies</h3>
+      <Box mb={3}>
+        <SectionHeader>Currencies</SectionHeader>
         {state.currencies.map((c) => (
-          <div className="list-item" key={c.id}>
-            <span>
-              <strong style={{ fontWeight: 500 }}>{c.name}</strong> ({c.symbol})
-              — 1 {c.symbol} = {c.rate} gp
-            </span>
-            <Button
-              size="sm"
-              variant="danger"
-              onClick={() => deleteCurrency(c.id)}
-            >
-              Remove
-            </Button>
-          </div>
+          <ListItem
+            key={c.id}
+            label={`${c.name} (${c.symbol}) — 1 ${c.symbol} = ${c.rate} gp`}
+            onRemove={() =>
+              onUpdate({
+                currencies: state.currencies.filter((x) => x.id !== c.id),
+              })
+            }
+          />
         ))}
-        <div className="add-inline">
-          <input
+        <Stack direction="row" spacing={0.75} mt={0.75} flexWrap="wrap">
+          <TextField
             placeholder="Name"
             value={newCurrName}
             onChange={(e) => setNewCurrName(e.target.value)}
-            style={{ minWidth: 100, maxWidth: 140 }}
+            size="small"
+            sx={{ width: 130, ...sxSmall }}
+            inputProps={inputProps}
           />
-          <input
+          <TextField
             placeholder="Symbol"
             value={newCurrSym}
             onChange={(e) => setNewCurrSym(e.target.value)}
-            style={{ width: 72 }}
+            size="small"
+            sx={{ width: 80, ...sxSmall }}
+            inputProps={inputProps}
           />
-          <input
+          <TextField
             placeholder="GP rate"
             value={newCurrRate}
             onChange={(e) => setNewCurrRate(e.target.value)}
-            style={{ width: 82 }}
+            size="small"
             type="number"
-            step="0.01"
+            inputProps={{ ...inputProps, step: "0.01" }}
+            sx={{ width: 90, ...sxSmall }}
           />
           <Button onClick={addCurrency}>Add</Button>
-        </div>
-      </div>
+        </Stack>
+      </Box>
 
       {/* Characters */}
-      <div className="settings-section">
-        <h3>Characters</h3>
+      <Box mb={3}>
+        <SectionHeader>Characters</SectionHeader>
         {state.characters.map((c, i) => (
-          <div className="list-item" key={i}>
-            <span>{c}</span>
-            <Button size="sm" variant="danger" onClick={() => deleteChar(i)}>
-              Remove
-            </Button>
-          </div>
+          <ListItem
+            key={i}
+            label={c}
+            onRemove={() => {
+              const next = [...state.characters];
+              next.splice(i, 1);
+              onUpdate({ characters: next });
+            }}
+          />
         ))}
-        <div className="add-inline">
-          <input
+        <Stack direction="row" spacing={0.75} mt={0.75}>
+          <TextField
             placeholder="Character name"
             value={newChar}
-            style={{ minWidth: 140, maxWidth: 200 }}
             onChange={(e) => setNewChar(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") addChar();
             }}
+            size="small"
+            sx={{ minWidth: 160, ...sxSmall }}
+            inputProps={inputProps}
           />
           <Button onClick={addChar}>Add</Button>
-        </div>
-      </div>
+        </Stack>
+      </Box>
 
       {/* Locations */}
-      <div className="settings-section">
-        <h3>Locations</h3>
+      <Box mb={3}>
+        <SectionHeader>Locations</SectionHeader>
         {state.locations.map((l, i) => (
-          <div className="list-item" key={i}>
-            <span>{l}</span>
-            <Button size="sm" variant="danger" onClick={() => deleteLoc(i)}>
-              Remove
-            </Button>
-          </div>
+          <ListItem
+            key={i}
+            label={l}
+            onRemove={() => {
+              const next = [...state.locations];
+              next.splice(i, 1);
+              onUpdate({ locations: next });
+            }}
+          />
         ))}
-        <div className="add-inline">
-          <input
+        <Stack direction="row" spacing={0.75} mt={0.75}>
+          <TextField
             placeholder="Location name"
             value={newLoc}
-            style={{ minWidth: 140, maxWidth: 200 }}
             onChange={(e) => setNewLoc(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") addLoc();
             }}
+            size="small"
+            sx={{ minWidth: 160, ...sxSmall }}
+            inputProps={inputProps}
           />
           <Button onClick={addLoc}>Add</Button>
-        </div>
-      </div>
+        </Stack>
+      </Box>
 
       {/* Data */}
-      <div className="settings-section">
-        <h3>Data</h3>
+      <Box mb={3}>
+        <SectionHeader>Data</SectionHeader>
         <Button
           variant="danger"
           onClick={() => {
@@ -183,7 +250,7 @@ export function Settings({ state, onUpdate, onReset }: Props) {
         >
           Reset to defaults
         </Button>
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 }

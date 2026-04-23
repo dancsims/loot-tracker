@@ -1,4 +1,15 @@
 import { useState } from "react";
+import {
+  Box,
+  Stack,
+  Typography,
+  Table,
+  TableHead,
+  TableBody,
+  TableFooter,
+  TableRow,
+  TableCell,
+} from "@mui/material";
 import { Button } from "./ui/Button";
 import { SortButton } from "./ui/SortButton";
 import { TransactionModal } from "./modals/TransactionModal";
@@ -17,6 +28,9 @@ interface Props {
   onDelete: (id: string) => void;
 }
 
+const pos = { color: "#3b6d11" };
+const neg = { color: "#a32d2d" };
+
 export function Ledger({ state, onAdd, onUpdate, onDelete }: Props) {
   const [sort, setSort] = useState<SortState>({ col: "date", dir: "desc" });
   const [modal, setModal] = useState<"add" | Transaction | null>(null);
@@ -29,17 +43,8 @@ export function Ledger({ state, onAdd, onUpdate, onDelete }: Props) {
     state.currencies,
   );
   const sorted = [...withBal].sort((a, b) => {
-    let av: string, bv: string;
-    if (sort.col === "date") {
-      av = a.date;
-      bv = b.date;
-    } else if (sort.col === "description") {
-      av = a.description;
-      bv = b.description;
-    } else {
-      av = a.date;
-      bv = b.date;
-    }
+    const av = sort.col === "description" ? a.description : a.date;
+    const bv = sort.col === "description" ? b.description : b.date;
     const cmp = av < bv ? -1 : av > bv ? 1 : 0;
     return cmp * (sort.dir === "asc" ? 1 : -1);
   });
@@ -59,84 +64,128 @@ export function Ledger({ state, onAdd, onUpdate, onDelete }: Props) {
   }
 
   return (
-    <div style={{ minWidth: 700, maxWidth: 900, margin: "0 auto" }}>
-      <div className="section-header">
-        <h2>Transaction ledger</h2>
+    <Box>
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={1.5}
+      >
+        <Typography fontWeight={500} fontSize={14} color="var(--text-primary)">
+          Transaction ledger
+        </Typography>
         <Button variant="primary" onClick={() => setModal("add")}>
           + Add transaction
         </Button>
-      </div>
+      </Stack>
 
-      <div className="table-wrap">
-        <table style={{ minWidth: 600, width: "100%" }}>
-          <thead>
-            <tr>
-              <th>
+      <Box sx={{ overflowX: "auto" }}>
+        <Table size="small" sx={{ minWidth: 600 }}>
+          <TableHead>
+            <TableRow>
+              <TableCell
+                sx={{
+                  fontSize: 11,
+                  fontWeight: 500,
+                  color: "var(--text-secondary)",
+                }}
+              >
                 <SortButton col="date" sort={sort} onSort={toggleSort}>
                   Date
                 </SortButton>
-              </th>
-              <th>
+              </TableCell>
+              <TableCell
+                sx={{
+                  fontSize: 11,
+                  fontWeight: 500,
+                  color: "var(--text-secondary)",
+                }}
+              >
                 <SortButton col="description" sort={sort} onSort={toggleSort}>
                   Description
                 </SortButton>
-              </th>
+              </TableCell>
               {state.currencies.map((c) => (
-                <th key={c.id} style={{ textAlign: "right", width: 60 }}>
+                <TableCell
+                  key={c.id}
+                  align="right"
+                  sx={{
+                    fontSize: 11,
+                    fontWeight: 500,
+                    color: "var(--text-secondary)",
+                    width: 60,
+                  }}
+                >
                   <SortButton col={c.id} sort={sort} onSort={toggleSort}>
                     {c.symbol}
                   </SortButton>
-                </th>
+                </TableCell>
               ))}
-              <th style={{ fontSize: 11 }}>Balance</th>
-              <th />
-            </tr>
-          </thead>
-          <tbody>
+              <TableCell sx={{ fontSize: 11, color: "var(--text-secondary)" }}>
+                Balance
+              </TableCell>
+              <TableCell />
+            </TableRow>
+          </TableHead>
+          <TableBody>
             {sorted.length === 0 ? (
-              <tr>
-                <td colSpan={state.currencies.length + 4} className="empty">
+              <TableRow>
+                <TableCell
+                  colSpan={state.currencies.length + 4}
+                  align="center"
+                  sx={{ color: "var(--text-secondary)", py: 3.5 }}
+                >
                   No transactions yet
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
               sorted.map((tx) => (
-                <tr key={tx.id}>
-                  <td
-                    style={{
+                <TableRow key={tx.id}>
+                  <TableCell
+                    sx={{
                       color: "var(--text-secondary)",
                       whiteSpace: "nowrap",
                       width: 90,
+                      fontSize: 13,
                     }}
                   >
                     {tx.date}
-                  </td>
-                  <td>
+                  </TableCell>
+                  <TableCell
+                    sx={{ fontSize: 13, color: "var(--text-primary)" }}
+                  >
                     {tx.description}
                     {tx.note && (
-                      <div
-                        style={{ fontSize: 11, color: "var(--text-secondary)" }}
-                      >
+                      <Typography fontSize={11} color="var(--text-secondary)">
                         {tx.note}
-                      </div>
+                      </Typography>
                     )}
-                  </td>
+                  </TableCell>
                   {state.currencies.map((c) => {
                     const a = tx.amounts[c.id];
                     return (
-                      <td key={c.id} style={{ textAlign: "right" }}>
+                      <TableCell key={c.id} align="right">
                         {a !== undefined ? (
-                          <span className={a < 0 ? "neg" : "pos"}>
+                          <Typography
+                            component="span"
+                            fontSize={13}
+                            sx={a < 0 ? neg : pos}
+                          >
                             {formatSigned(a)}
-                          </span>
+                          </Typography>
                         ) : (
-                          <span style={{ color: "var(--border-md)" }}>—</span>
+                          <Typography
+                            component="span"
+                            color="var(--text-secondary)"
+                          >
+                            —
+                          </Typography>
                         )}
-                      </td>
+                      </TableCell>
                     );
                   })}
-                  <td
-                    style={{
+                  <TableCell
+                    sx={{
                       fontSize: 11,
                       color: "var(--text-secondary)",
                       whiteSpace: "nowrap",
@@ -146,52 +195,90 @@ export function Ledger({ state, onAdd, onUpdate, onDelete }: Props) {
                       .filter((c) => (tx.running[c.id] ?? 0) !== 0)
                       .map((c) => `${tx.running[c.id]}${c.symbol}`)
                       .join(" ")}
-                  </td>
-                  <td
-                    style={{
-                      textAlign: "right",
-                      whiteSpace: "nowrap",
-                      width: 90,
-                    }}
+                  </TableCell>
+                  <TableCell
+                    align="right"
+                    sx={{ whiteSpace: "nowrap", width: 90 }}
                   >
-                    <Button size="sm" onClick={() => setModal(tx)}>
-                      Edit
-                    </Button>{" "}
-                    <Button
-                      size="sm"
-                      variant="danger"
-                      onClick={() => {
-                        if (confirm("Delete this transaction?"))
-                          onDelete(tx.id);
-                      }}
+                    <Stack
+                      direction="row"
+                      spacing={0.5}
+                      justifyContent="flex-end"
                     >
-                      Del
-                    </Button>
-                  </td>
-                </tr>
+                      <Button
+                        size="sm"
+                        className="btn white"
+                        onClick={() => setModal(tx)}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        onClick={() => {
+                          if (confirm("Delete this transaction?"))
+                            onDelete(tx.id);
+                        }}
+                      >
+                        Del
+                      </Button>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
               ))
             )}
-          </tbody>
-          <tfoot>
-            <tr>
-              <td colSpan={2} style={{ fontWeight: 500 }}>
+          </TableBody>
+          <TableFooter>
+            <TableRow>
+              <TableCell
+                colSpan={2}
+                sx={{
+                  fontWeight: 500,
+                  bgcolor: "action.hover",
+                  borderTop: "0.5px solid rgba(0,0,0,0.22)",
+                  color: "var(--text-secondary)",
+                }}
+              >
                 Totals
-              </td>
+              </TableCell>
               {state.currencies.map((c) => (
-                <td key={c.id} style={{ textAlign: "right" }}>
-                  <span className={(totals[c.id] ?? 0) < 0 ? "neg" : "pos"}>
+                <TableCell
+                  key={c.id}
+                  align="right"
+                  sx={{
+                    bgcolor: "action.hover",
+                    borderTop: "0.5px solid rgba(0,0,0,0.22)",
+                  }}
+                >
+                  <Typography
+                    component="span"
+                    fontSize={13}
+                    sx={(totals[c.id] ?? 0) < 0 ? neg : pos}
+                  >
                     {(totals[c.id] ?? 0).toFixed(2)}
-                  </span>
-                </td>
+                  </Typography>
+                </TableCell>
               ))}
-              <td style={{ fontSize: 11, color: "var(--text-secondary)" }}>
+              <TableCell
+                sx={{
+                  fontSize: 11,
+                  color: "var(--text-secondary)",
+                  bgcolor: "action.hover",
+                  borderTop: "0.5px solid rgba(0,0,0,0.22)",
+                }}
+              >
                 {grandGP.toFixed(2)} gp equiv
-              </td>
-              <td />
-            </tr>
-          </tfoot>
-        </table>
-      </div>
+              </TableCell>
+              <TableCell
+                sx={{
+                  bgcolor: "action.hover",
+                  borderTop: "0.5px solid rgba(0,0,0,0.22)",
+                }}
+              />
+            </TableRow>
+          </TableFooter>
+        </Table>
+      </Box>
 
       {modal !== null && (
         <TransactionModal
@@ -201,6 +288,6 @@ export function Ledger({ state, onAdd, onUpdate, onDelete }: Props) {
           onClose={() => setModal(null)}
         />
       )}
-    </div>
+    </Box>
   );
 }

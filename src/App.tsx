@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { Dashboard } from "./components/Dashboard";
 import { Ledger } from "./components/Ledger";
 import { LootTracker } from "./components/LootTracker";
@@ -8,13 +8,34 @@ import { useSRD } from "./hooks/useSRD";
 import { exportJson, parseImport } from "./utils/data";
 import { DEFAULT_STATE } from "./utils/defaults";
 import type { CampaignState, TabId, Transaction, Item } from "./types";
+import { ThemeToggle } from "./components/ui/ThemeToggle";
 
 export default function App() {
   const [state, setState] = useLocalStorage<CampaignState>(
     "loot-tracker-v2",
     DEFAULT_STATE,
   );
-  const [tab, setTab] = useState<TabId>("dashboard");
+  // After
+  const [tab, setTab] = useLocalStorage<TabId>("active-tab", "dashboard");
+  // After
+  const systemDefault: "light" | "dark" =
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
+
+  const [theme, setTheme] = useLocalStorage<"light" | "dark">(
+    "theme",
+    systemDefault,
+  );
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
+
+  function toggleTheme() {
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+  }
   const {
     items: srdItems,
     status: srdStatus,
@@ -108,6 +129,7 @@ export default function App() {
           <button className="btn sm primary" onClick={() => exportJson(state)}>
             Export JSON
           </button>
+          <ThemeToggle mode={theme} onToggle={toggleTheme} />
         </div>
       </div>
 
@@ -151,9 +173,7 @@ export default function App() {
           <Settings
             state={state}
             onUpdate={patch}
-            onReset={() =>
-              setState({ ...DEFAULT_STATE, campaign: state.campaign })
-            }
+            onReset={() => setState({ ...DEFAULT_STATE })}
           />
         )}
       </div>

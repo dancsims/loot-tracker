@@ -1,3 +1,15 @@
+import {
+  Box,
+  Grid,
+  Paper,
+  Typography,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  Stack,
+} from "@mui/material";
 import { Badge } from "./ui/Badge";
 import { getTotals, toGrandTotal } from "../utils/currency";
 import type { CampaignState } from "../types";
@@ -5,6 +17,9 @@ import type { CampaignState } from "../types";
 interface Props {
   state: CampaignState;
 }
+
+const pos = { color: "#3b6d11" };
+const neg = { color: "#a32d2d" };
 
 export function Dashboard({ state }: Props) {
   const totals = getTotals(state.transactions, state.currencies);
@@ -15,142 +30,270 @@ export function Dashboard({ state }: Props) {
     .slice(0, 5);
 
   return (
-    <div style={{ minWidth: 700, maxWidth: 900, margin: "0 auto" }}>
+    <Box>
       {/* Currency metrics */}
-      <div className="metrics">
+      <Grid container spacing={1} mb={2} alignItems="stretch">
         {state.currencies.map((c) => {
           const v = totals[c.id] ?? 0;
           return (
-            <div className="metric" key={c.id}>
-              <div className="metric-label">{c.name}</div>
-              <div className={`metric-value ${v < 0 ? "neg" : ""}`}>
-                {v.toLocaleString()}{" "}
-                <span style={{ fontSize: 12, fontWeight: 400 }}>
-                  {c.symbol}
-                </span>
-              </div>
-            </div>
+            <Grid item xs={6} sm={4} md={2} key={c.id}>
+              <Paper
+                variant="outlined"
+                sx={{
+                  p: 1.25,
+                  borderRadius: 2,
+                  backgroundColor: "var(--bg-tertiary)",
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  color="var(--text-secondary)"
+                  display="block"
+                  fontSize={10}
+                >
+                  {c.name} ({c.symbol})
+                </Typography>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontSize: 20,
+                    fontWeight: 500,
+                    color: "var(--text-primary)",
+                    ...(v < 0 ? neg : {}),
+                  }}
+                >
+                  {v.toLocaleString()}{" "}
+                </Typography>
+              </Paper>
+            </Grid>
           );
         })}
-        <div
-          className="metric"
-          style={{ border: "0.5px solid rgba(83,74,183,0.25)" }}
-        >
-          <div className="metric-label">Total (gp equiv)</div>
-          <div className={`metric-value ${grandGP < 0 ? "neg" : ""}`}>
-            {grandGP.toFixed(2)}{" "}
-            <span style={{ fontSize: 12, fontWeight: 400 }}>gp</span>
-          </div>
-        </div>
-      </div>
+        <Grid item xs={6} sm={4} md={2}>
+          <Paper
+            variant="outlined"
+            sx={{
+              p: 1.25,
+              borderRadius: 2,
+              backgroundColor: "var(--bg-tertiary)",
+            }}
+          >
+            <Typography
+              variant="caption"
+              color="var(--text-secondary)"
+              display="block"
+              fontSize={10}
+            >
+              Total (gpe)
+            </Typography>
+            <Typography
+              variant="h6"
+              sx={{
+                fontSize: 20,
+                fontWeight: 500,
+                color: "var(--text-primary)",
+                ...(grandGP < 0 ? neg : {}),
+              }}
+            >
+              {grandGP.toFixed(2)}{" "}
+            </Typography>
+          </Paper>
+        </Grid>
+      </Grid>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <Grid container spacing={2}>
         {/* Notable loot */}
-        <div>
-          <div className="section-header">
-            <h2>Notable loot</h2>
-            <span style={{ fontSize: 12, color: "var(--text-secondary)" }}>
+        <Grid
+          item
+          xs={12}
+          md={6}
+          sx={{ backgroundColor: "var(--bg-primary)", p: 2, borderRadius: 2 }}
+        >
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+            mb={1}
+          >
+            <Typography
+              fontWeight={500}
+              fontSize={14}
+              color="var(--text-primary)"
+            >
+              Notable loot
+            </Typography>
+            <Typography variant="caption" color="var(--text-secondary)">
               {notable.length} item{notable.length !== 1 ? "s" : ""}
-            </span>
-          </div>
-          <table style={{ width: "100%", minWidth: 280 }}>
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Held by / stored at</th>
-              </tr>
-            </thead>
-            <tbody>
+            </Typography>
+          </Stack>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell
+                  sx={{
+                    fontSize: 11,
+                    fontWeight: 500,
+                    color: "var(--text-secondary)",
+                  }}
+                >
+                  Item
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontSize: 11,
+                    fontWeight: 500,
+                    color: "var(--text-secondary)",
+                  }}
+                >
+                  Held by / stored at
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
               {notable.length === 0 ? (
-                <tr>
-                  <td colSpan={2} className="empty">
+                <TableRow>
+                  <TableCell
+                    colSpan={2}
+                    align="center"
+                    sx={{ color: "var(--text-secondary)", py: 3.5 }}
+                  >
                     No notable items yet
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : (
                 notable.map((i) => (
-                  <tr key={i.id}>
-                    <td>
-                      <span style={{ fontWeight: 500 }}>{i.name}</span>
+                  <TableRow key={i.id}>
+                    <TableCell>
+                      <Typography
+                        fontWeight={500}
+                        fontSize={13}
+                        color="var(--text-primary)"
+                      >
+                        {i.name}
+                      </Typography>
                       {i.qty > 1 && (
                         <>
                           {" "}
                           <Badge variant="neutral">×{i.qty}</Badge>
                         </>
                       )}
-                    </td>
-                    <td>
+                    </TableCell>
+                    <TableCell>
                       {i.carrier ? (
                         <Badge variant="character">{i.carrier}</Badge>
                       ) : i.location ? (
                         <Badge variant="location">{i.location}</Badge>
                       ) : (
-                        <span style={{ color: "var(--text-secondary)" }}>
-                          —
-                        </span>
+                        <Typography color="text.secondary">—</Typography>
                       )}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ))
               )}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        </Grid>
 
         {/* Recent transactions */}
-        <div>
-          <div className="section-header">
-            <h2>Recent transactions</h2>
-          </div>
-          <table style={{ width: "100%", minWidth: 320 }}>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Description</th>
-                <th style={{ textAlign: "right" }}>Amount</th>
-              </tr>
-            </thead>
-            <tbody>
+        <Grid item xs={12} md={6}>
+          <Typography
+            fontWeight={500}
+            fontSize={14}
+            mb={1}
+            color="var(--text-primary)"
+          >
+            Recent transactions
+          </Typography>
+          <Table size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell
+                  sx={{
+                    fontSize: 11,
+                    fontWeight: 500,
+                    color: "var(--text-secondary)",
+                  }}
+                >
+                  Date
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontSize: 11,
+                    fontWeight: 500,
+                    color: "var(--text-secondary)",
+                  }}
+                >
+                  Description
+                </TableCell>
+                <TableCell
+                  align="right"
+                  sx={{
+                    fontSize: 11,
+                    fontWeight: 500,
+                    color: "var(--text-secondary)",
+                  }}
+                >
+                  Amount
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
               {recent.length === 0 ? (
-                <tr>
-                  <td colSpan={3} className="empty">
+                <TableRow>
+                  <TableCell
+                    colSpan={3}
+                    align="center"
+                    sx={{ color: "var(--text-secondary)", py: 3.5 }}
+                  >
                     No transactions yet
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : (
                 recent.map((tx) => {
                   const parts = Object.entries(tx.amounts).map(([cid, a]) => (
-                    <span key={cid} className={a! < 0 ? "neg" : "pos"}>
+                    <Typography
+                      key={cid}
+                      component="span"
+                      fontSize={13}
+                      sx={a! < 0 ? neg : pos}
+                    >
                       {a! > 0 ? "+" : ""}
                       {a} {cid}
-                    </span>
+                    </Typography>
                   ));
                   return (
-                    <tr key={tx.id}>
-                      <td
-                        style={{
+                    <TableRow key={tx.id}>
+                      <TableCell
+                        sx={{
                           color: "var(--text-secondary)",
                           whiteSpace: "nowrap",
                           width: 90,
+                          fontSize: 13,
                         }}
                       >
                         {tx.date}
-                      </td>
-                      <td>{tx.description}</td>
-                      <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
-                        {parts.reduce<React.ReactNode[]>(
-                          (acc, el, i) => (i === 0 ? [el] : [...acc, " ", el]),
-                          [],
-                        )}
-                      </td>
-                    </tr>
+                      </TableCell>
+                      <TableCell
+                        sx={{ fontSize: 13, color: "var(--text-primary)" }}
+                      >
+                        {tx.description}
+                      </TableCell>
+                      <TableCell align="right" sx={{ whiteSpace: "nowrap" }}>
+                        <Stack
+                          direction="row"
+                          spacing={0.5}
+                          justifyContent="flex-end"
+                        >
+                          {parts}
+                        </Stack>
+                      </TableCell>
+                    </TableRow>
                   );
                 })
               )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+            </TableBody>
+          </Table>
+        </Grid>
+      </Grid>
+    </Box>
   );
 }

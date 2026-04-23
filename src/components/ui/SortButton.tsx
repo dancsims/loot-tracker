@@ -1,3 +1,4 @@
+import { TableSortLabel } from "@mui/material";
 import type { SortState } from "../../types";
 
 interface SortButtonProps {
@@ -8,10 +9,30 @@ interface SortButtonProps {
 }
 
 export function SortButton({ col, sort, onSort, children }: SortButtonProps) {
-  const active = sort.col === col ? sort.dir : "";
+  const active = sort.col === col;
   return (
-    <button className={`sort-btn ${active}`} onClick={() => onSort(col)}>
+    <TableSortLabel
+      active={active}
+      direction={active ? sort.dir : "asc"}
+      onClick={() => onSort(col)}
+      hideSortIcon={!active}
+      sx={{
+        fontSize: 11,
+        color: "var(--text-secondary) !important",
+        "& .MuiTableSortLabel-icon": {
+          fontSize: 14,
+          color: "var(--text-secondary) !important",
+          opacity: 1,
+        },
+        "&.Mui-active": {
+          color: "var(--text-secondary) !important",
+        },
+        "&.Mui-active .MuiTableSortLabel-icon": {
+          color: "var(--text-secondary) !important",
+        },
+      }}
+    >
       {children}
-    </button>
+    </TableSortLabel>
   );
 }

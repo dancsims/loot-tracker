@@ -1,4 +1,16 @@
 import { useState, useRef, useEffect } from "react";
+import {
+  Grid,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  FormControlLabel,
+  Checkbox,
+  Paper,
+  Typography,
+  Box,
+} from "@mui/material";
 import { Modal, Field } from "../ui/Modal";
 import { Button } from "../ui/Button";
 import { uid } from "../../utils/data";
@@ -14,6 +26,8 @@ interface Props {
   onSave: (item: Item) => void;
   onClose: () => void;
 }
+
+const inputSx = { "& .MuiInputBase-input": { fontSize: 13 } };
 
 export function ItemModal({
   item,
@@ -113,14 +127,19 @@ export function ItemModal({
         label="Name"
         hint={
           srdReady ? (
-            <span style={{ color: "var(--accent)", fontSize: 10 }}>
-              {fetching ? "Fetching SRD data…" : "(SRD autocomplete active)"}
-            </span>
+            <Typography
+              component="span"
+              sx={{ color: "primary.main", fontSize: 10 }}
+            >
+              (SRD autocomplete active)
+            </Typography>
           ) : undefined
         }
       >
-        <div className="srd-autocomplete">
-          <input
+        <Box sx={{ position: "relative" }}>
+          <TextField
+            fullWidth
+            size="small"
             value={name}
             onChange={(e) => onNameChange(e.target.value)}
             placeholder="Item name"
@@ -128,23 +147,46 @@ export function ItemModal({
             disabled={fetching}
           />
           {showDrop && (
-            <div className="srd-dropdown">
+            <Paper
+              elevation={3}
+              sx={{
+                position: "absolute",
+                top: "100%",
+                left: 0,
+                right: 0,
+                zIndex: 50,
+                maxHeight: 180,
+                overflowY: "auto",
+                mt: 0.25,
+                borderRadius: 1,
+              }}
+            >
               {matches.map((m) => (
-                <div
+                <Box
                   key={m.index}
-                  className="srd-option"
                   onMouseDown={() => selectSrd(m)}
+                  sx={{
+                    px: 1.25,
+                    py: 0.875,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    "&:hover": { bgcolor: "action.hover" },
+                  }}
                 >
                   {m.name}
-                </div>
+                </Box>
               ))}
-            </div>
+            </Paper>
           )}
-        </div>
+        </Box>
       </Field>
 
       <Field label="Description">
-        <textarea
+        <TextField
+          fullWidth
+          multiline
+          minRows={2}
+          size="small"
           value={description}
           onChange={(e) => setDesc(e.target.value)}
           style={{ width: "100%" }}
@@ -152,70 +194,90 @@ export function ItemModal({
         />
       </Field>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        <Field label="Quantity">
-          <input
-            type="number"
-            min={1}
-            value={qty}
-            onChange={(e) => setQty(parseInt(e.target.value) || 1)}
-          />
-        </Field>
-        <Field label="Carried by">
-          <select value={carrier} onChange={(e) => setCarrier(e.target.value)}>
-            <option value="">— none —</option>
-            {characters.map((c) => (
-              <option key={c}>{c}</option>
-            ))}
-          </select>
-        </Field>
-      </div>
+      <Grid container spacing={1.25}>
+        <Grid item xs={6}>
+          <Field label="Quantity">
+            <TextField
+              fullWidth
+              size="small"
+              type="number"
+              value={qty}
+              onChange={(e) => setQty(parseInt(e.target.value) || 1)}
+              // inputProps={{ min: 1, style: { fontSize: 13 } }}
+              sx={inputSx}
+            />
+          </Field>
+        </Grid>
+        <Grid item xs={6}>
+          <Field label="Carried by">
+            <FormControl fullWidth size="small">
+              <Select
+                value={carrier}
+                onChange={(e) => setCarrier(e.target.value)}
+                displayEmpty
+                sx={{ fontSize: 13 }}
+              >
+                <MenuItem value="">
+                  <em>— none —</em>
+                </MenuItem>
+                {characters.map((c) => (
+                  <MenuItem key={c} value={c} sx={{ fontSize: 13 }}>
+                    {c}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Field>
+        </Grid>
+      </Grid>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        <Field label="Stored at">
-          <select
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            disabled={!!carrier}
-          >
-            <option value="">— none —</option>
-            {locations.map((l) => (
-              <option key={l}>{l}</option>
-            ))}
-          </select>
-        </Field>
-        <Field label="Tags (comma separated)">
-          <input
-            value={tags}
-            onChange={(e) => setTags(e.target.value)}
-            placeholder="magic, wondrous"
-          />
-        </Field>
-      </div>
+      <Grid container spacing={1.25}>
+        <Grid item xs={6}>
+          <Field label="Stored at">
+            <FormControl fullWidth size="small" disabled={!!carrier}>
+              <Select
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                displayEmpty
+                sx={{ fontSize: 13 }}
+              >
+                <MenuItem value="">
+                  <em>— none —</em>
+                </MenuItem>
+                {locations.map((l) => (
+                  <MenuItem key={l} value={l} sx={{ fontSize: 13 }}>
+                    {l}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Field>
+        </Grid>
+        <Grid item xs={6}>
+          <Field label="Tags (comma separated)">
+            <TextField
+              fullWidth
+              size="small"
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
+              placeholder="magic, wondrous"
+              sx={inputSx}
+              // inputProps={{ style: { fontSize: 13 } }}
+            />
+          </Field>
+        </Grid>
+      </Grid>
 
-      <div
-        className="field"
-        style={{ display: "flex", alignItems: "center", gap: 8 }}
-      >
-        <input
-          type="checkbox"
-          id="item-notable"
-          checked={notable}
-          onChange={(e) => setNotable(e.target.checked)}
-          style={{ flexShrink: 0 }}
-        />
-        <label
-          htmlFor="item-notable"
-          style={{
-            fontSize: 13,
-            color: "var(--text-primary)",
-            textTransform: "none",
-            letterSpacing: 0,
-          }}
-        >
-          Mark as notable item
-        </label>
-      </div>
+      <FormControlLabel
+        control={
+          <Checkbox
+            checked={notable}
+            onChange={(e) => setNotable(e.target.checked)}
+            size="small"
+          />
+        }
+        label={<Typography sx={{ fontSize: 13 }}>Mark as notable item</Typography>}
+      />
     </Modal>
   );
 }
